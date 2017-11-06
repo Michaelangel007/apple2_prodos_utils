@@ -73,22 +73,22 @@ Usage: <dsk> <command> [<options>] [<path>]
                  <path>              Path of virtual sub-directory to delete
                                      There is no default -- it must be specified
                                      NOTE:
-                                         You can not delete
-                                         the root directory: /
+                                         You can't delete the root directory: /
                  -f                  Force removal of sub-directory
                                      (Normally a sub-directory must be empty)
 
 Where <dsk> is a virtual disk image with an extension of:
 
-    .dsk
-    .do
-    .po
+    .dsk  (Assumes DOS3.3 sector order)
+    .do   (DOS3.3 sector order)
+    .po   (ProDOS sector order)
 
 NOTE: To skip always having to specify the <.dsk> name set the environment variable:
 
            PRODOS_VOLUME
 e.g.
-   export PRODOS_VOLUME=path/to/volume.po
+    export PRODOS_VOLUME=path/to/volume.po
+    set    PRODOS_VOLUME=disk.dsk
 
 Three different disk sizes are accepted for init
 
@@ -112,4 +112,19 @@ Examples:
     prodos b032.dsk init  -size=32  /BLANK32
 ```
 
+Example output:
 
+```
+dnb??iwr /TEST            Blocks Size    Type    Aux   Kind  iNode Dir   Ver Min  Create    Time    Modified  Time  
+-------- ---------------- ------ ------- ------- ----- ----- ----- ----- --- ---  --------- ------  --------- ------
+-------- *FOO1.TXT             1 $000002 TXT $04 $0000 sed 1 @0007 @0002 0.0 v00   6-NOV-17         <NO DATE>        
+-------- *FOO2.TXT             1 $000002 TXT $04 $0000 sed 1 @0008 @0002 0.0 v00   6-NOV-17         <NO DATE>        
+-------- *FOO3.TXT             1 $000002 TXT $04 $0000 sed 1 @0009 @0002 0.0 v00   6-NOV-17         <NO DATE>        
+-------- *TEXT.BIN             3 $000264 BIN $06 $0000 sap 2 @000A @0002 0.0 v00   6-NOV-17         <NO DATE>        
+========
+Files:        4 / 52 ( 7.69%)
+Blocks: 
+   Free:    267 (95.36%), 1st: @ $000D = 13
+   Used:     13 ( 4.64%)
+  Total:    280
+```

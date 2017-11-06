@@ -705,7 +705,10 @@ int main( const int nArg, const char *aArg[] )
             break;
 
         default:
-            return usage();
+            if( nArg < 2 )
+                return usage();
+            else
+                return printf( "ERROR: Unknown command: %s\n", pCommand );
             break;
     }
 
