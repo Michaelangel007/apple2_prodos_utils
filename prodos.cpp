@@ -414,7 +414,7 @@ void readVolume( int nArg, const char *aArg[], int *iArg )
 // ========================================================================
 int main( const int nArg, const char *aArg[] )
 {
-    int   iArg = 1; // DSK is 1st arg
+    int   iArg              = 1; // DSK is 1st arg
     char *pathname_filename = NULL;
     char *auto_dsk_name     = getenv( "PRODOS_VOLUME" );
 
