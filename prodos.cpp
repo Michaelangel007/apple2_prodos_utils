@@ -14,12 +14,8 @@
     #include "prodos.tools.cpp"
 
 /*
-    prodos cp foo.dsk file1 [file2 ...]
-
-TODO:
-    PRODOS_VOLUME=test.po
+Is this still needed?
     -path /
-
 */
 
     enum DISK_COMMANDS_e
@@ -101,7 +97,7 @@ int usage()
 "\n"
 "           PRODOS_VOLUME\n"
 "e.g.\n"
-"   PRODOS_VOLUME=path/to/volume.po\n"
+"   export PRODOS_VOLUME=path/to/volume.po\n"
 "\n"
 "Three different disk sizes are accepted for init\n"
 "\n"
