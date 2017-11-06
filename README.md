@@ -128,3 +128,8 @@ Blocks:
    Used:     13 ( 4.64%)
   Total:    280
 ```
+
+# Building / Compiling
+
+`make clean; make`
+
