@@ -187,6 +187,9 @@ int usage()
 "    prodos test.dsk rm    /bar/foo2\n"
 "    prodos test.dsk rmdir /bar\n"
 "    prodos test.dsk init  /TEST\n"
+"    prodos b140.dsk init  -size=140 /BLANK140\n"
+"    prodos b800.dsk init  -size=800 /BLANK800\n"
+"    prodos b032.dsk init  -size=32  /BLANK32\n"
 "\n"
     );
 
