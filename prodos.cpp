@@ -39,7 +39,7 @@ Is this still needed?
          "cat"     // CAT__SHORT
         ,"catalog" // CAT__LONG
         ,"cp"      // FILE_ADD
-        ,"dir"     // CAT__LONG
+        ,"dir"     // CAT__LONG2
         ,"get"     // FILE_GET
         ,"init"    // VOL__INIT
         ,"ls"      // CAT__NAMES
@@ -49,19 +49,81 @@ Is this still needed?
         ,""
     };
 
-    const char *gaDescriptions[ NUM_DISK_COMMANDS ] =
+    const char *gaCommandDescriptions[ NUM_DISK_COMMANDS ] =
     {
          "Catalog (short form)"      // CAT__SHORT
         ,"Catalog (long form)"       // CAT__LONG
         ,"Add file(s) to volume"     // FILE_ADD
-        ,"Catalog (long form)"       // CAT__LONG
+        ,"Catalog (long form)"       // CAT__LONG2
         ,"Extract file from volume"  // FILE_GET
         ,"Format disk"               // VOL__INIT
         ,"Catalog (file names only)" // CAT__NAMES
         ,"Create a sub-directory"    // DIR__CREATE
         ,"Delete file from volume"   // FILE_DELETE
         ,"Remove a sub-directory"    // DIR__DELETE
-        ,""
+        ,""                          // NUM_DISK_COMMANDS
+    };
+
+    const char *gaOptionsDescriptions[ NUM_DISK_COMMANDS ] =
+    {
+         // CAT__SHORT
+"                 [<path>]            Path of virtual sub-directory to view\n"
+"                                     Defaults to: /\n"
+        ,// CAT_LONG
+"                 [<path>]            Path of virtual sub-directory to view\n"
+"                                     Defaults to: /\n"
+        ,// FILE_ADD
+"                 <path>              Destination virutal sub-directory to add to\n"
+"                                     There is no default -- it must be specified\n"
+"                 -access=$##         Set access flags\n"
+"                                         $80 Volume/file can be destroyed\n"
+"                                         $40 Volume/file can be renamed\n"
+"                                         $20 Volume/file changed since last backup\n"
+"                                         $04 Volume/file is invisible\n"
+"                                         $02 Volume/file can be read\n"
+"                                         $01 Volume/file can be written\n"
+"                 -aux=$####          Set the aux address\n"
+"                 -date=MM/DD/YY      Set create date to specified date\n"
+"                 -date=DD-MON-YY     Set create date to specified date\n"
+"                                     MON is one of:\n"
+"                                         JAN, FEB, MAR, APR, MAY, JUN,\n"
+"                                         JUL, AUG, SEP, OCT, NOV, DEC\n"
+"                 -time=HH:MMa        Set create time to specified 12-hour AM\n"
+"                 -time=HH:MMp        Set create time to specified 12-hour PM\n"
+"                 -time=HH:MM         Set create time to specified 24-hour time\n"
+"                 -type=$##           Force file type to one of the 256 types\n"
+"                 -moddate=MM/DD/YY   Set last modified date to specified date\n"
+"                 -modtime=HH:MM      Set last modified date to specified time\n"
+        , //CAT_LONG2
+"                                     This is an alias for 'catalog'\n"
+        ,// FILE_GET
+"                 <path>              Path of virtual file to extract\n"
+"                                     NOTES:\n"
+"                                         The file remains on the virtual volume\n"
+"                                         To delete a file see ........: rm\n"
+"                                         To delete a sub-directory see: rmdir\n"
+        , // VOL__INIT
+"                 <path>              Name of virtual volume.\n"
+"                 -size=140           Format 140 KB (5 1/4\")\n"
+"                 -size=800           Format 800 KB (3 1/2\")\n"
+"                 -size=32            Format 32  MB (Hard Disk)\n"
+        , // CAT__NAMES
+"                 [<path>]            Path to sub-directory to view\n"
+"                                     Defaults to: /\n"
+        , // DIR__CREATE
+"                 <path>              Destination virutal sub-directory to create\n"
+"                                     There is no default -- it must be specified\n"
+        , // FILE_DELETE
+"                 <path>              Path of virtual file to delete\n"
+"                                     There is no default -- it must be specified\n"
+        , // DIR__DELETE
+"                 <path>              Path of virtual sub-directory to delete\n"
+"                                     There is no default -- it must be specified\n"
+"                                     NOTE:\n"
+"                                         You can't delete the root directory: /\n"
+"                 -f                  Force removal of sub-directory\n"
+"                                     (Normally a sub-directory must be empty)\n"
+        , NULL
     };
 
     char        sPath[ 256 ] = "/";
@@ -78,26 +140,35 @@ Is this still needed?
 int usage()
 {
     printf(
-"Usage: <dsk> <command> [<options>]\n"
+"Usage: <dsk> <command> [<options>] [<path>]\n"
 "\n"
     );
 
     for( int iCommand = 0; iCommand < NUM_DISK_COMMANDS-1; iCommand++ )
-        printf( "    %-7s  %s\n", gaCommands[ iCommand ], gaDescriptions[ iCommand ] );
-
+    {
+        /**/printf( "    %-7s  %s\n"
+                , gaCommands           [ iCommand ]
+                , gaCommandDescriptions[ iCommand ]
+            );
+        if( gaOptionsDescriptions[ iCommand ] )
+            printf( "%s"
+                , gaOptionsDescriptions[ iCommand ]
+        );
+    }
     printf(
 "\n"
 "Where <dsk> is a virtual disk image with an extension of:\n"
 "\n"
-"    .dsk\n"
-"    .do\n"
-"    .po\n"
+"    .dsk  (Assumes DOS3.3 sector order)\n"
+"    .do   (DOS3.3 sector order)\n"
+"    .po   (ProDOS sector order)\n"
 "\n"
 "NOTE: To skip always having to specify the <.dsk> name set the environment variable:\n"
 "\n"
 "           PRODOS_VOLUME\n"
 "e.g.\n"
-"   export PRODOS_VOLUME=path/to/volume.po\n"
+"    export PRODOS_VOLUME=path/to/volume.po\n"
+"    set    PRODOS_VOLUME=disk.dsk
 "\n"
 "Three different disk sizes are accepted for init\n"
 "\n"
