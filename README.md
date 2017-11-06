@@ -92,9 +92,9 @@ e.g.
 
 Three different disk sizes are accepted for init
 
-   prodos test.dsk init -size=140   # 5 1/4" (140KB)
-   prodos test.dsk init -size=800   # 3 1/2" (800KB)
-   prodos test.dsk init -size=32    #HardDisk (32 MB)
+   prodos test.dsk init -size=140   # 5 1/4"  (140 KB)
+   prodos test.dsk init -size=800   # 3 1/2"  (800 KB)
+   prodos test.dsk init -size=32    #HardDisk ( 32 MB)
 
 Examples:
 
