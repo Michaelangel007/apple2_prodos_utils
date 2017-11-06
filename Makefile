@@ -6,7 +6,7 @@ all:$(TARGETS)
 
 .PHONY: clean
 clean:
-	echo $(SOURCES)
+	@echo Sources: $(SOURCES)
 	$(RM) $(TARGETS)
 
 prodos: $(SOURCES)
