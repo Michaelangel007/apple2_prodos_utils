@@ -209,12 +209,22 @@ void setTimeNow( ProDOS_FileHeader_t *entry )
 }
 
 /*
-    -date=MM/DD/YY
-    -time=HR:MN[a|p]
-    -type=BIN
-    -type=$##
-    -aux=$####
     -access=$##
+    -aux=$####
+    -date=MM/DD/YY
+    -date=DD-MON-YY
+    -moddate=MM/DD/YY
+    -moddate=DD-MON-YY
+    -modtime=HR:MNa
+    -modtime=HR:MNp
+    -modtime=HH:MM
+    -modtime=$####
+    -time=HR:MNa
+    -time=HR:MNp
+    -time=$####
+    -time=HH:MM
+    -type=$##
+    -type=BIN
 */
 // @return false if fatel error
 // ========================================================================
@@ -276,10 +286,31 @@ bool getCopyConfig( ProDOS_FileHeader_t *entry, const char *arg )
 
     }
     else
+    if( strncmp( arg, "moddate=", 8 ) == 0 )
+    {
+        nLenSuffix = nLenPrefix - 8;
+        pVal       = arg        + 8;
+
+printf( "ERROR: Modified Time not yet implemented\n" );
+
+    }
+    else
+    if( strncmp( arg, "modtime=", 8 ) == 0 )
+    {
+        nLenSuffix = nLenPrefix - 8;
+        pVal       = arg        + 8;
+
+printf( "ERROR: Modified Time not yet implemented\n" );
+
+    }
+    else
     if( strncmp( arg, "time=", 5 ) == 0 )
     {
         nLenSuffix = nLenPrefix - 5;
         pVal       = arg        + 5;
+
+printf( "ERROR: Create Time not yet implemented\n" );
+
     }
     else
     if( strncmp( arg, "type=", 5 ) == 0 )
