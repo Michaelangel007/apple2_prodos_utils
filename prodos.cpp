@@ -82,7 +82,7 @@ TODO:
 int usage()
 {
     printf(
-"Usage: <dsk> <comlocaltime_rmand> [<options>]\n"
+"Usage: <dsk> <command> [<options>]\n"
 "\n"
     );
 
