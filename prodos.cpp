@@ -168,7 +168,7 @@ int usage()
 "           PRODOS_VOLUME\n"
 "e.g.\n"
 "    export PRODOS_VOLUME=path/to/volume.po\n"
-"    set    PRODOS_VOLUME=disk.dsk
+"    set    PRODOS_VOLUME=disk.dsk\n"
 "\n"
 "Three different disk sizes are accepted for init\n"
 "\n"
