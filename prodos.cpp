@@ -25,8 +25,8 @@ TODO:
     enum DISK_COMMANDS_e
     {
          DISK_COMMAND_CAT_SHORT = 0 // cat
-        ,DISK_COMMAND_FILE_ADD      // cp  - Copy host filesystem to virtual DSK
         ,DISK_COMMAND_CAT_LONG      // catalog
+        ,DISK_COMMAND_FILE_ADD      // cp  - Copy host filesystem to virtual DSK
         ,DISK_COMMAND_CAT_LONG2     // dir - alias for catalog
         ,DISK_COMMAND_FILE_GET      // get - Copy virtual DSK to host file system
         ,DISK_COMMAND_VOL_INIT      // init
@@ -41,8 +41,8 @@ TODO:
     const char *gaCommands[ NUM_DISK_COMMANDS ] =
     {
          "cat"     // CAT__SHORT
-        ,"cp"      // FILE_ADD
         ,"catalog" // CAT__LONG
+        ,"cp"      // FILE_ADD
         ,"dir"     // CAT__LONG
         ,"get"     // FILE_GET
         ,"init"    // VOL__INIT
