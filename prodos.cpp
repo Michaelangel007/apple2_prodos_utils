@@ -126,7 +126,7 @@ Is this still needed?
         , NULL
     };
 
-    char        sPath[ 256 ] = "/";
+    char        sPath[ 256 ] = "/"; // TODO: What is max ProDOS path?
     const char *gpPath = NULL;
 
     int gnDay   = 0;
