@@ -2,6 +2,7 @@
 #define DEBUG_BITMAP    0
 #define DEBUG_DATE      0
 #define DEBUG_DIR       0
+#define DEBUG_EXTRACT   0
 #define DEBUG_FILE      0 // File Entry
 #define DEBUG_FIND_FILE 0
 #define DEBUG_FREE      0 // Free Blocks
@@ -282,10 +283,10 @@ if( block == PRODOS_ROOT_BLOCK )
 
 // Globals ________________________________________________________________
 
-    int  gnLastDirBlock = 0;
-    char gpLastDirName[ 16 ];
-
-    int  gnLastDirMaxFiles = 0;
+    int                 gnLastDirBlock = 0;
+    char                gpLastDirName[ 16 ];
+    int                 gnLastDirMaxFiles = 0;
+    ProDOS_FileHeader_t gtLastDirFile;
 
     ProDOS_VolumeHeader_t gVolume;
     ProDOS_FileHeader_t   gEntry; // Default fields for cp
@@ -555,8 +556,10 @@ int prodos_FindFile( ProDOS_VolumeHeader_t *volume, const char *path, int base =
 
                 gnLastDirBlock    = file.inode;
                 gnLastDirMaxFiles = file.size / volume->entry_num;
+                gtLastDirFile     = file;
 
 #if DEBUG_FIND_FILE
+    prodos_DumpFileHeader( gtLastDirFile );
     printf( "***\n" );
     printf( "  DIR  -> %04X\n", addr );
     printf( "  path -> %s\n"  , next );
@@ -594,6 +597,9 @@ int prodos_BlockGetPath( const char *path )
     gnLastDirBlock    = offset;
     int nDirBlocks    = prodos_BlockGetDirectoryCount( offset );
     gnLastDirMaxFiles = nDirBlocks * gVolume.entry_num;
+
+    memset( &gtLastDirFile, 0, sizeof( gtLastDirFile ) );
+
 
 #if DEBUG_PATH
     printf( "Directory Entry Bytes  : $%04X\n", gVolume.entry_len );
@@ -1288,6 +1294,65 @@ bool ProDOS_FileAdd( const char *to_path, const char *from_filename, ProDOS_File
 // ========================================================================
 void ProDOS_FileDelete( const char *path )
 {
+}
+
+
+// Copy a file from the virtual file system back to the host
+// ProDOS attributes are saved in file.prodos_meta
+// ========================================================================
+void ProDOS_FileExtract( const char *path )
+{
+    int base       = prodos_BlockGetPath( path );
+    int offset     = base + 4; // skip prev,next block pointers
+
+#if DEBUG_FILE
+    printf( "DEBUG: EXTRACT: path: %s\n", path );
+    printf( "DEBUG: EXTRACT: Dir @ %04X\n", base );
+    prodos_DumpFileHeader( gtLastDirFile );
+#endif
+
+#if 0
+
+#if DEBUG_EXTRACT
+    printf( "DEBUG: CATALOG: Dir @ %04X\n", base );
+#endif
+
+    if( !base )
+    {
+        if( path )
+            printf( "ERROR: Couldn't find directory: %s\n", path );
+        return false;
+    }
+
+    int prev_block = 0;
+    int next_block = 0;
+
+    do
+    {
+        prev_block = DskGet16( base + 0 );
+        next_block = DskGet16( base + 2 );
+
+        for( int iFile = 0; iFile < gVolume.entry_num; iFile++ )
+        {
+            ProDOS_VolumeHeader_t dir;
+            ProDOS_FileHeader_t   file;
+            prodos_GetFileHeader( offset, &file );
+
+            if( (file.len == 0) || (file.name[0] == 0) )
+                goto next_file;
+
+            if( file.kind == ProDOS_KIND_ROOT ) // Skip root Volume name entry
+                goto next_file;
+
+next_file:
+            offset += gVolume.entry_len;
+        }
+
+        base   = next_block * PRODOS_BLOCK_SIZE;
+        offset = base + 4; // skip prev,next block pointers
+
+    } while( next_block );
+#endif
 }
 
 
