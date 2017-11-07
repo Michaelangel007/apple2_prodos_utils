@@ -743,9 +743,9 @@ bool ProDOS_CatalogLong( const char *path = NULL )
     char dirname[ 15 + 3 + 1 ];
     prodos_PathFullyQualified( &gVolume, path, base, dirname );
 
-    printf( "dnb??iwr %-16s"
-                                     " Blocks Size    Type    Aux   Kind  iNode Dir   Ver Min  Create    Time    Modified  Time  \n", dirname );
-    printf( "-------- ---------------- ------ ------- ------- ----- ----- ----- ----- --- ---  --------- ------  --------- ------\n" );
+    printf( "Acc dnb??iwr %-16s"
+                                         " Blocks Size    Type    Aux   Kind  iNode Dir   Ver Min  Create    Time    Modified  Time  \n", dirname );
+    printf( "--- -------- ---------------- ------ ------- ------- ----- ----- ----- ----- --- ---  --------- ------  --------- ------\n" );
 //  printf( "dnb00011 0123456789ABCDEF  65536 $123456 BIN $FF $0000 sap F @0000 @0000 v00 v00  11-JAN-01  1:23a  11-JAN-01 12:34p\n" );
 
     do
@@ -784,6 +784,7 @@ bool ProDOS_CatalogLong( const char *path = NULL )
             prodos_DateToString( file.mod_date, &sAccessDate[0] );
             prodos_TimeToString( file.mod_time, &sAccessTime[0] );
 
+            printf( "$%02X " , file.access   );
             printf( "%s "    , sAccess       );
 
             if( file.kind == ProDOS_KIND_DIR )
