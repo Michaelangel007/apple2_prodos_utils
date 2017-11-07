@@ -10,6 +10,12 @@
 #define DEBUG_PATH      0
 #define DEBUG_TIME      0
 #define DEBUG_VOLUME    0
+/*
+    prodos_*    Private functions
+    ProDOS_*    Public  functions
+*/
+
+
 
 // --- ProDOS crap ---
 
@@ -701,6 +707,7 @@ bool ProDOS_GetVolumeName( char *pVolume_ )
          \_____/
           name
 */
+// ========================================================================
 void prodos_PathFullyQualified( ProDOS_VolumeHeader_t *volume, const char *path, int base, char *name_ )
 {
     // We have a sub-directory
@@ -859,6 +866,7 @@ next_file:
 }
 
 
+// ========================================================================
 bool ProDOS_CatalogNames( const char *path = NULL )
 {
     int files      = 0;
@@ -910,6 +918,7 @@ next_file:
 
     return true;
 }
+
 
 // ========================================================================
 bool ProDOS_CatalogShort( const char *path = NULL )
