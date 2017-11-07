@@ -496,6 +496,7 @@ int prodos_FindFile( ProDOS_VolumeHeader_t *volume, const char *path, int base =
     char sDirName[16];
     int  i;
 
+    // Split path
     for( i = 0; i < nPathLen; i++ )
         if( path[i] == '/' )
         {
