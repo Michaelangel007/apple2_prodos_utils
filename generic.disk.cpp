@@ -58,6 +58,25 @@
         gaDsk[ offset + 2 ] = (val >>16) & 0xFF;
     }
 
+    int DskGetIndexBlock( int offset, int index )
+    {
+        int block = 0
+        | (gaDsk[ offset + index + 0   ] << 0)
+        | (gaDsk[ offset + index + 256 ] << 8)
+        ;
+        return block;
+    }
+
+    /*
+        000:lo0 lo1 lo2 ...
+        100:hi0 hi1 hi2 ...
+    */
+    void DskPutIndexBlock( int offset, int index, int block )
+    {
+        gaDsk[ offset + index + 0   ] = (block >> 0) & 0xFF;
+        gaDsk[ offset + index + 256 ] = (block >> 8) & 0xFF;
+    }
+
 
 // --- Name ---
 
