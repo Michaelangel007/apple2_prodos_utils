@@ -171,7 +171,7 @@ if( block == PRODOS_ROOT_BLOCK )
         uint8_t  min_ver        ; //+29    1 $1D // 0 = ProDOS 1.0
         uint8_t  access         ; //+30    1 $1E
 // --- diff from subdir
-        uint8_t  aux            ; //+31    2 $1F Load Address for Binary
+        uint16_t aux            ; //+31    2 $1F Load Address for Binary
 // --- diff from volume ---
         uint16_t mod_date       ; //+33    2 $21
         uint16_t mod_time       ; //+35    2 $23
