@@ -1189,8 +1189,7 @@ bool ProDOS_FileAdd( const char *to_path, const char *from_filename, ProDOS_File
         {
             if( iKind == ProDOS_KIND_TREE )
             {
-                gaDsk[ iMasterIndex + iBlock + 0   ] = (iMetaBlock >> 0) & 0xFF;
-                gaDsk[ iMasterIndex + iBlock + 256 ] = (iMetaBlock >> 8) & 0xFF;
+                DskPutIndexBlock( iMasterIndex, iBlock, iMetaBlock );
             }
         }
 
@@ -1225,8 +1224,7 @@ bool ProDOS_FileAdd( const char *to_path, const char *from_filename, ProDOS_File
             // Update single index block
             if( iIndexBase )
             {
-                gaDsk[ iIndexBase + iBlock + 0   ] = (iDataBlock >> 0) & 0xFF;
-                gaDsk[ iIndexBase + iBlock + 256 ] = (iDataBlock >> 8) & 0xFF;
+                DskPutIndexBlock( iIndexBase, iBlock, iDataBlock );
             }
         }
         else
