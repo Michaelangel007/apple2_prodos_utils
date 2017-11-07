@@ -1298,59 +1298,106 @@ void ProDOS_FileDelete( const char *path )
 // Copy a file from the virtual file system back to the host
 // ProDOS attributes are saved in file.prodos_meta
 // ========================================================================
-void ProDOS_FileExtract( const char *path )
+bool ProDOS_FileExtract( const char *path )
 {
-    int base       = prodos_BlockGetPath( path );
-    int offset     = base + 4; // skip prev,next block pointers
-
-#if DEBUG_FILE
-    printf( "DEBUG: EXTRACT: path: %s\n", path );
-    printf( "DEBUG: EXTRACT: Dir @ %04X\n", base );
-    prodos_DumpFileHeader( gtLastDirFile );
-#endif
-
-#if 0
+    int base = prodos_BlockGetPath( path );
+    ProDOS_FileHeader_t *pEntry = &gtLastDirFile;
 
 #if DEBUG_EXTRACT
-    printf( "DEBUG: CATALOG: Dir @ %04X\n", base );
+    printf( "DEBUG: EXTRACT: path: %s\n", path );
+    printf( "DEBUG: EXTRACT: Dir @ %04X\n", base );
+#endif
+
+#if DEBUG_FILE
+    prodos_DumpFileHeader( gtLastDirFile );
 #endif
 
     if( !base )
     {
-        if( path )
-            printf( "ERROR: Couldn't find directory: %s\n", path );
+        printf( "ERROR: Couldn't file to extract: %s\n", path );
         return false;
     }
 
-    int prev_block = 0;
-    int next_block = 0;
-
-    do
+    if( !pEntry->len )
     {
-        prev_block = DskGet16( base + 0 );
-        next_block = DskGet16( base + 2 );
+        printf( "ERROR: Couldn't get file information\n" );
+        return false;
+    }
 
-        for( int iFile = 0; iFile < gVolume.entry_num; iFile++ )
+    const int kind = pEntry->kind;
+    if( false
+    ||  kind == ProDOS_KIND_DIR
+    ||  kind == ProDOS_KIND_SUB
+    ||  kind == ProDOS_KIND_ROOT
+    )
+    {
+        printf( "ERROR: Can't extract a file of a directory type\n" );
+        return false;
+    }
+
+    const char   sExt[] = "._meta";
+    const size_t nExt   = strlen( sExt );
+    /* */ char   sAttrib[ PRODOS_MAX_PATH ];
+    int          nAttrib = string_CopyUpper( sAttrib +       0, pEntry->name, pEntry->len );
+    /* */                  string_CopyUpper( sAttrib + nAttrib, sExt        , nExt        );
+
+    printf( "Saving meta... %s\n", sAttrib );
+    FILE *pFileMeta = fopen( sAttrib, "w+b" );
+    {
+        fprintf( pFileMeta, "kind = 0x%02X\n", pEntry->kind     );
+        fprintf( pFileMeta, "date = 0x%04X\n", pEntry->date     );
+        fprintf( pFileMeta, "time = 0x%04X\n", pEntry->time     );
+        fprintf( pFileMeta, "cver = 0x%02X\n", pEntry->cur_ver  );
+        fprintf( pFileMeta, "mver = 0x%02X\n", pEntry->min_ver  );
+        fprintf( pFileMeta, "aux  = 0x%04X\n", pEntry->aux      );
+        fprintf( pFileMeta, "modd = 0x%04X\n", pEntry->mod_date );
+        fprintf( pFileMeta, "modt = 0x%04X\n", pEntry->mod_time );
+        fclose( pFileMeta );
+    }
+
+    int addr = pEntry->inode * PRODOS_BLOCK_SIZE;
+    int size = pEntry->size;
+
+    printf( "Saving data... %s\n", pEntry->name );
+    FILE *pFileData = fopen( pEntry->name, "w+b" );
+    {
+// TODO:
+// printf( "WARNING: File exists.  Use -i to ask if should over-write.\n" );
+
+        switch( kind )
         {
-            ProDOS_VolumeHeader_t dir;
-            ProDOS_FileHeader_t   file;
-            prodos_GetFileHeader( offset, &file );
+            case ProDOS_KIND_SEED: // <= 512 bytes
+            {
+                fwrite( &gaDsk[ addr ], 1, size, pFileData );
+                break;
+            }
+            case ProDOS_KIND_SAPL: // <= 128 KB
+            {
+                int nBlock = pEntry->blocks - 1; // 1st block is index block
+                for( int iBlock = 0; iBlock < nBlock; iBlock++ )
+                {
+                    int iDataBlock  = DskGetIndexBlock( addr, iBlock );
+                    int iDataOffset = iDataBlock * PRODOS_BLOCK_SIZE;
 
-            if( (file.len == 0) || (file.name[0] == 0) )
-                goto next_file;
-
-            if( file.kind == ProDOS_KIND_ROOT ) // Skip root Volume name entry
-                goto next_file;
-
-next_file:
-            offset += gVolume.entry_len;
+                    if( iBlock != nBlock - 1 )
+                        fwrite( &gaDsk[ iDataOffset ], 1, PRODOS_BLOCK_SIZE, pFileData );
+                    else
+                        fwrite( &gaDsk[ iDataOffset ], 1, pEntry->size % PRODOS_BLOCK_SIZE, pFileData );
+                }
+                break;
+            }
+            case ProDOS_KIND_TREE:
+            {
+                printf( "ERROR: Tree files are not yet handled.\n" );
+                break;
+            }
+            default:
+                printf( "ERROR: Unhandled file type '%s' ($%02X)\n", gaProDOS_KindDescription[ kind ], kind );
+                break;
         }
+    }
 
-        base   = next_block * PRODOS_BLOCK_SIZE;
-        offset = base + 4; // skip prev,next block pointers
-
-    } while( next_block );
-#endif
+    return true;
 }
 
 
