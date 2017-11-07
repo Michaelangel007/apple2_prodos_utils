@@ -185,6 +185,28 @@ if( block == PRODOS_ROOT_BLOCK )
                                 ; //============
     };                          ; // 39      $27
 
+#if DEBUG_FILE
+    // ------------------------------------------------------------
+    void prodos_DumpFileHeader( const ProDOS_FileHeader_t &info )
+    {
+        printf( "DEBUG: FILE: name: %s\n"   , info.name      );
+        printf( "DEBUG: FILE: kind: $%02X\n", info.kind      );
+        printf( "DEBUG: FILE: type: $%02X\n", info.type      );
+        printf( "DEBUG: FILE:inode: $%04X\n", info.inode     );
+        printf( "DEBUG: FILE:block: $%04X\n", info.blocks    );
+        printf( "DEBUG: FILE: size: $%06X\n", info.size      );
+        printf( "DEBUG: FILE: date: $%02X\n", info.date      );
+        printf( "DEBUG: FILE: time: $%02X\n", info.time      );
+        printf( "DEBUG: FILE: cVer: $%02X\n", info.cur_ver   );
+        printf( "DEBUG: FILE: mVer: $%02X\n", info.min_ver   );
+        printf( "DEBUG: FILE:  aux: $%04X\n", info.aux       );
+        printf( "DEBUG: FILE:mDate: $%02X\n", info.mod_date  );
+        printf( "DEBUG: FILE:mTime: $%02X\n", info.mod_time  );
+        printf( "DEBUG: FILE:dBloc: $%04X\n", info.dir_block );
+        printf( "-----\n" );
+    }
+#endif
+
     // ------------------------------------------------------------
     void prodos_GetFileHeader( int offset, ProDOS_FileHeader_t *file_ )
     {
@@ -214,22 +236,9 @@ if( block == PRODOS_ROOT_BLOCK )
         info.dir_block  = DskGet16( offset + 37 );
 
 #if DEBUG_FILE
-    printf( "DEBUG: FILE: name: %s\n"   , info.name      );
-    printf( "DEBUG: FILE: kind: $%02X\n", info.kind      );
-    printf( "DEBUG: FILE: type: $%02X\n", info.type      );
-    printf( "DEBUG: FILE:inode: $%04X\n", info.inode     );
-    printf( "DEBUG: FILE:block: $%04X\n", info.blocks    );
-    printf( "DEBUG: FILE: size: $%06X\n", info.size      );
-    printf( "DEBUG: FILE: date: $%02X\n", info.date      );
-    printf( "DEBUG: FILE: time: $%02X\n", info.time      );
-    printf( "DEBUG: FILE: cVer: $%02X\n", info.cur_ver   );
-    printf( "DEBUG: FILE: mVer: $%02X\n", info.min_ver   );
-    printf( "DEBUG: FILE:  aux: $%04X\n", info.aux       );
-    printf( "DEBUG: FILE:mDate: $%02X\n", info.mod_date  );
-    printf( "DEBUG: FILE:mTime: $%02X\n", info.mod_time  );
-    printf( "DEBUG: FILE:dBloc: $%04X\n", info.dir_block );
-    printf( "-----\n" );
+        prodos_DumpFileHeader( info );
 #endif
+
 
         if(  file_ )
             *file_ = info;
