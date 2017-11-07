@@ -92,6 +92,7 @@ Is this still needed?
 "                 -time=HH:MMp        Set create time to specified 12-hour PM\n"
 "                 -time=HH:MM         Set create time to specified 24-hour time\n"
 "                 -type=$##           Force file type to one of the 256 types\n"
+"                                     The file type is auto-detected via extension\n"
 "                 -moddate=MM/DD/YY   Set last modified date to specified date\n"
 "                 -modtime=HH:MM      Set last modified date to specified time\n"
         , //CAT_LONG2
@@ -281,7 +282,7 @@ bool getCopyConfig( ProDOS_FileHeader_t *entry, const char *arg )
             }
 
             day = atoi( pVal + 0 );
-            mon = prodos_DateMonthToInt( pVal + 3 );           
+            mon = prodos_DateMonthToInt( pVal + 3 );
             yar = atoi( pVal + 7 );
         }
 
@@ -365,7 +366,7 @@ printf( "ERROR: Create Time not yet implemented\n" );
         if( val > 0xFF ) val = 0xFF;
         entry->access = val;
     }
- 
+
     return true;
 }
 
@@ -628,7 +629,7 @@ int main( const int nArg, const char *aArg[] )
                     prodos_InitFileHeader( &gEntry ); // prep for next file
                     setTimeNow( &gEntry );
                 }
-                    
+
                 if( !bFilesAdded )
                     break;
             }
@@ -679,7 +680,7 @@ int main( const int nArg, const char *aArg[] )
 #if DEBUG_MAIN
     printf( "INIT: size = %s\n", itoa_comma( gnDskSize ) );
 #endif
-                    } 
+                    }
                     else
                         return printf( "ERROR: Unknown option: %s\n", pArg );
                 }
