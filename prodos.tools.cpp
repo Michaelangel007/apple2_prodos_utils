@@ -72,7 +72,7 @@
 
     void prodos_GetVolumeHeader( ProDOS_VolumeHeader_t *meta_, int block )
     {
-        int base     = block*PRODOS_BLOCK_SIZE + 4; // skip prev/next dir block double linked list
+        int base = block*PRODOS_BLOCK_SIZE + 4; // skip prev/next dir block double linked list
         ProDOS_VolumeHeader_t info;
 
         info.kind       = (gaDsk  [ base +  0 ] >> 4) & 0xF;
@@ -460,8 +460,12 @@ int prodos_DirGetFirstFree( ProDOS_VolumeHeader_t *volume, int base )
 
 
 // @return 0 if couldn't find file, else offset
+// Sets:
+//    gtLastDirFile
+//    gnLastDirBlock
+//    gnLastDirMaxFiles
 // ------------------------------------------------------------------------
-int prodos_FindFile( ProDOS_VolumeHeader_t *volume, const char *path, int base = 0x400 )
+int prodos_FindFile( ProDOS_VolumeHeader_t *volume, const char *path, int base = PRODOS_ROOT_OFFSET )
 {
     if( !path )
         return base;
@@ -572,7 +576,7 @@ next_file:
 // ------------------------------------------------------------------------
 int prodos_BlockGetPath( const char *path )
 {
-    int offset = PRODOS_ROOT_BLOCK*PRODOS_BLOCK_SIZE; // Block 2 * 0x200 Bytes/Block = 0x400 abs offset
+    int offset = PRODOS_ROOT_OFFSET; // Block 2 * 0x200 Bytes/Block = 0x400 abs offset
 
     // Scan Directory ...
     strcpy( gpLastDirName, gVolume.name );
@@ -679,12 +683,12 @@ bool ProDOS_GetVolumeName( char *pVolume_ )
 {
     bool bValid = false;
 
-    int vol_length = gaDsk[ 0x404 ] & 0xF;
+    int vol_length = gaDsk[ PRODOS_ROOT_OFFSET + 4 ] & 0xF;
 
     if( vol_length < 16 )
     {
         for( int i = 0; i < vol_length; i++ )
-            *pVolume_++ = gaDsk[ 0x405 + i ];
+            *pVolume_++ = gaDsk[ PRODOS_ROOT_OFFSET + 5 + i ];
     }
 
     *pVolume_ = 0;
