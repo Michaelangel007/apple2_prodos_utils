@@ -1364,12 +1364,18 @@ bool ProDOS_FileExtract( const char *path )
     int addr = pEntry->inode * PRODOS_BLOCK_SIZE;
     int size = pEntry->size;
 
-    printf( "Saving data... %s\n", pEntry->name );
-    FILE *pFileData = fopen( pEntry->name, "w+b" );
-    {
 // TODO:
 // printf( "WARNING: File exists.  Use -i to ask if should over-write.\n" );
+    printf( "Saving data... %s\n", pEntry->name );
+    FILE *pFileData = fopen( pEntry->name, "w+b" );
 
+    if( !pFileData )
+    {
+        printf( "ERROR: Couldn't open data file for writing: %s\n", pEntry->name );
+        return false;
+    }
+
+    {
         switch( kind )
         {
             case ProDOS_KIND_SEED: // <= 512 bytes
