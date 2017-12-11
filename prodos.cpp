@@ -326,7 +326,7 @@ printf( "ERROR: Create Time not yet implemented\n" );
 
         if( pVal[0] == '$' )
         {
-            val = getHexVal( pVal + 1 );
+            val = getHexVal( pVal ); // safely ignores leading $
             if( val < 0x00 ) val = 0x00;
             if( val > 0xFF ) val = 0xFF;
             entry->type = val;
@@ -352,10 +352,13 @@ printf( "ERROR: Create Time not yet implemented\n" );
         nLenSuffix = nLenPrefix - 4;
         pVal       = arg        + 4;
 
-        val = getHexVal( pVal );
-        if( val < 0x0000 ) val = 0x0000;
-        if( val > 0xFFFF ) val = 0xFFFF;
-        entry->aux = val;
+        if( pVal[0] == '$' )
+        {
+            val = getHexVal( pVal ); // safely ignores leading $
+            if( val < 0x0000 ) val = 0x0000;
+            if( val > 0xFFFF ) val = 0xFFFF;
+            entry->aux = val;
+        }
     }
     else
     if( strncmp( arg, "access=", 7 ) == 0 )
