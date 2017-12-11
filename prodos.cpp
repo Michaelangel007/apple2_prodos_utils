@@ -653,10 +653,43 @@ int main( const int nArg, const char *aArg[] )
         }
 
         case DISK_COMMAND_FILE_GET:
-            readVolume( nArg, aArg, &iArg );
-            ProDOS_FileExtract( gpPath ); // pathname_filename
-            break;
+        {
+            const char *pBootSectorFileName = NULL;
 
+            for( ; iArg < nArg; iArg++ )
+            {
+                const char *pArg = &aArg[iArg][0];
+
+                if( pArg[0] == '-' )
+                {
+                    if( strncmp( pArg+1,"boot=", 5 ) == 0 )
+                    {
+                        pBootSectorFileName = pArg + 6;
+
+                        size_t nBootSectorNameLength = strlen( pBootSectorFileName );
+                        if(   !nBootSectorNameLength )
+                        {
+                            printf( "ERROR: Need a file name to extract the boot sector to.\n" );
+                            return 1;
+                        }
+                    }
+                    else
+                        return printf( "ERROR: Unknown option: %s\n", pArg );
+                }
+            }
+
+            readVolume( nArg, aArg, &iArg );
+
+            if( pBootSectorFileName )
+            {
+                ProDOS_ExtractBootSector( pBootSectorFileName );
+//              loaded = ProDOS_ReplaceBootSector( pBootSectorFileName );
+//              if( loaded ) DskSave();
+            }
+            else
+                ProDOS_FileExtract( gpPath ); // pathname_filename
+            break;
+        }
         case DISK_COMMAND_VOL_INIT:
             gnDskSize            = DSK_SIZE_312; // TODO: --size=140 --size=800 --size=32
             if( !DskGetInterleave( gpDskName ) )
