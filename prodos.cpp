@@ -91,6 +91,8 @@ Is this still needed?
 "                 -time=HH:MMa        Set create time to specified 12-hour AM\n"
 "                 -time=HH:MMp        Set create time to specified 12-hour PM\n"
 "                 -time=HH:MM         Set create time to specified 24-hour time\n"
+"                 -type=<type>        Set the file type to a 3 character code\n"
+"                                     i.e. BIN, SYS\n"
 "                 -type=$##           Force file type to one of the 256 types\n"
 "                                     The file type is auto-detected via extension\n"
 "                 -moddate=MM/DD/YY   Set last modified date to specified date\n"
