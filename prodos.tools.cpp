@@ -1423,9 +1423,8 @@ void ProDOS_Init( const char *path )
     memset( gaDsk, 0, gnDskSize );
 
     // Copy Boot Sector
-    // TODO:
+    // TODO: Use ProDOS 2.4.1 boot sector
 
-    // Init Bitmap
 
     // Create blocks for root directory
     int nRootDirBlocks = 4;
@@ -1433,6 +1432,7 @@ void ProDOS_Init( const char *path )
     int iNextDirBlock  = 0;
     int iOffset;
 
+    // Init Bitmap
     gVolume.meta.bitmap_block = PRODOS_ROOT_BLOCK + nRootDirBlocks;
     int nBitmapBlocks = prodos_BlockInitFree( &gVolume );
 
