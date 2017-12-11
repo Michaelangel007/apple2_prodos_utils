@@ -1545,3 +1545,59 @@ void ProDOS_Init( const char *path )
 #endif
 }
 
+
+// Read T0S0 and save it to a file on the host
+// @returns 0 if succes
+// ========================================================================
+bool ProDOS_ExtractBootSector( const char *pBootSectorFileName )
+{
+    FILE *pDstFile = fopen( pBootSectorFileName, "w+b" );
+
+    if( !pDstFile )
+    {
+        printf( "ERROR: Couldn't open boot sector filename for writing: %s\n", pBootSectorFileName );
+        return false;
+    }
+
+    fwrite( &gaDsk[ 0 ], 1, 256, pDstFile );
+    fclose( pDstFile );
+
+    return true;
+}
+
+
+// Read a file from the host and replace T0S0
+// @returns true if sucess, else false on error
+// ========================================================================
+bool ProDOS_ReplaceBootSector( const char *pBootSectorFileName )
+{
+    FILE   *pSrcFile = fopen( pBootSectorFileName, "rb" );
+
+    if( !pSrcFile )
+    {
+        printf( "ERROR: Couldn't open boot sector filename for reading: %s\n", pBootSectorFileName );
+        return false;
+    }
+
+    size_t size = File_Size( pSrcFile );
+
+    // size < 256
+    memset( &gaDsk[ 0 ], 0, 256 );
+    if( size < 256 )
+        printf( "INFO.: Boot sector < 256 bytes. Padding boot sector with zeroes.\n" );
+
+    // size >= 256
+    if( size > 255 )
+    {
+        printf( "WARNING: Boot sector > 255 bytes. Truncating to first 256 bytes.\n" );
+        size = 256;
+    }
+
+    fread( &gaDsk[ 0 ], 1, size, pSrcFile );
+    fclose( pSrcFile );
+
+    // Caller will do: DskSave();
+
+    return true;
+}
+
