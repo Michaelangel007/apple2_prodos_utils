@@ -1397,6 +1397,8 @@ bool ProDOS_FileExtract( const char *path )
         }
     }
 
+    fclose( pFileData );
+
     return true;
 }
 
