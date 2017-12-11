@@ -1343,17 +1343,23 @@ bool ProDOS_FileExtract( const char *path )
 
     printf( "Saving meta... %s\n", sAttrib );
     FILE *pFileMeta = fopen( sAttrib, "w+b" );
+
+    if( !pFileMeta )
     {
-        fprintf( pFileMeta, "kind = 0x%02X\n", pEntry->kind     );
-        fprintf( pFileMeta, "date = 0x%04X\n", pEntry->date     );
-        fprintf( pFileMeta, "time = 0x%04X\n", pEntry->time     );
-        fprintf( pFileMeta, "cver = 0x%02X\n", pEntry->cur_ver  );
-        fprintf( pFileMeta, "mver = 0x%02X\n", pEntry->min_ver  );
-        fprintf( pFileMeta, "aux  = 0x%04X\n", pEntry->aux      );
-        fprintf( pFileMeta, "modd = 0x%04X\n", pEntry->mod_date );
-        fprintf( pFileMeta, "modt = 0x%04X\n", pEntry->mod_time );
-        fclose( pFileMeta );
+        printf( "ERROR: Couldnt' open attribute file for writing: %s\n", sAttrib );
+        return false;
     }
+
+    fprintf( pFileMeta, "kind = 0x%02X\n", pEntry->kind     );
+    fprintf( pFileMeta, "date = 0x%04X\n", pEntry->date     );
+    fprintf( pFileMeta, "time = 0x%04X\n", pEntry->time     );
+    fprintf( pFileMeta, "cver = 0x%02X\n", pEntry->cur_ver  );
+    fprintf( pFileMeta, "mver = 0x%02X\n", pEntry->min_ver  );
+    fprintf( pFileMeta, "aux  = 0x%04X\n", pEntry->aux      );
+    fprintf( pFileMeta, "modd = 0x%04X\n", pEntry->mod_date );
+    fprintf( pFileMeta, "modt = 0x%04X\n", pEntry->mod_time );
+    fclose( pFileMeta );
+
 
     int addr = pEntry->inode * PRODOS_BLOCK_SIZE;
     int size = pEntry->size;
