@@ -270,7 +270,7 @@ if( block == PRODOS_ROOT_BLOCK )
         gaDsk   [ base + 29 ] = file->min_ver  ;
         gaDsk   [ base + 30 ] = file->access   ;
 
-        gaDsk   [ base + 31 ] = file->aux      ;
+        DskPut16( base + 31 ,   file->aux               );
         DskPut16( base + 33 ,   file->mod_date          );
         DskPut16( base + 35 ,   file->mod_time          );
         DskPut16( base + 37 ,   file->dir_block         );
