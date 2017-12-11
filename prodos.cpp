@@ -646,9 +646,11 @@ int main( const int nArg, const char *aArg[] )
         }
 
         case DISK_COMMAND_FILE_DELETE:
+        {
             readVolume( nArg, aArg, &iArg );
 //          ProDOS_FileDelete( gpPath ); // pathname_filename
             break;
+        }
 
         case DISK_COMMAND_FILE_GET:
             readVolume( nArg, aArg, &iArg );
