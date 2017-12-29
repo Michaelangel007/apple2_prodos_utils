@@ -219,7 +219,7 @@ void setTimeNow( ProDOS_FileHeader_t *entry )
 }
 
 /*
-    TODO: Sync these up with <file>._META
+    TODO: Sync these up with <file>._META ProDOS_FileExtract() and getCopyConfig()
 
     -access=$##
     -aux=$####
@@ -237,6 +237,9 @@ void setTimeNow( ProDOS_FileHeader_t *entry )
     -time=HH:MM
     -type=$##
     -type=BIN
+
+    -version=$##
+    -minver=$##
 */
 // @return false if fatel error
 // ========================================================================

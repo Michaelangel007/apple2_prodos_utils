@@ -1350,14 +1350,17 @@ bool ProDOS_FileExtract( const char *path )
         return false;
     }
 
-    fprintf( pFileMeta, "kind = 0x%02X\n", pEntry->kind     );
-    fprintf( pFileMeta, "date = 0x%04X\n", pEntry->date     );
-    fprintf( pFileMeta, "time = 0x%04X\n", pEntry->time     );
-    fprintf( pFileMeta, "cver = 0x%02X\n", pEntry->cur_ver  );
-    fprintf( pFileMeta, "mver = 0x%02X\n", pEntry->min_ver  );
-    fprintf( pFileMeta, "aux  = 0x%04X\n", pEntry->aux      );
-    fprintf( pFileMeta, "modd = 0x%04X\n", pEntry->mod_date );
-    fprintf( pFileMeta, "modt = 0x%04X\n", pEntry->mod_time );
+    // TODO: Sync these up with <file>._META ProDOS_FileExtract() and getCopyConfig()
+    fprintf( pFileMeta, "access  = $%02X\n", pEntry->access   );
+    fprintf( pFileMeta, "aux     = $%04X\n", pEntry->aux      );
+    fprintf( pFileMeta, "type    = $%02X\n", pEntry->type     );
+    fprintf( pFileMeta, "kind    = $%02X\n", pEntry->kind     );
+    fprintf( pFileMeta, "date    = $%04X\n", pEntry->date     );
+    fprintf( pFileMeta, "time    = $%04X\n", pEntry->time     );
+    fprintf( pFileMeta, "version = $%02X\n", pEntry->cur_ver  );
+    fprintf( pFileMeta, "minver  = $%02X\n", pEntry->min_ver  );
+    fprintf( pFileMeta, "moddate = $%04X\n", pEntry->mod_date );
+    fprintf( pFileMeta, "modtime = $%04X\n", pEntry->mod_time );
     fclose( pFileMeta );
 
 
