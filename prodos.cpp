@@ -186,7 +186,7 @@ int usage()
 "    prodos test.dsk cp    foo1 foo2 /\n"
 "    prodos test.dsk mkdir bar\n"
 "    prodos test.dsk cp    foo2      /bar\n"
-"    prodos test.dsk get   /bar/foo2\n"
+"    prodos test.dsk get   /PRODOS\n"
 "    prodos test.dsk rm    /bar/foo2\n"
 "    prodos test.dsk rmdir /bar\n"
 "    prodos test.dsk init  /TEST\n"
