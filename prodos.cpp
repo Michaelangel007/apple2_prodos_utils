@@ -219,6 +219,8 @@ void setTimeNow( ProDOS_FileHeader_t *entry )
 }
 
 /*
+    TODO: Sync these up with <file>._META
+
     -access=$##
     -aux=$####
     -date=MM/DD/YY
