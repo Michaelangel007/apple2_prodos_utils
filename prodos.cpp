@@ -684,6 +684,10 @@ int main( const int nArg, const char *aArg[] )
 
         case DISK_COMMAND_FILE_GET:
         {
+#if DEBUG_MAIN
+    printf( "DEBUG: get\n" );
+#endif
+
             const char *pBootSectorFileName = NULL;
 
             for( ; iArg < nArg; iArg++ )
@@ -709,6 +713,10 @@ int main( const int nArg, const char *aArg[] )
             }
 
             readVolume( nArg, aArg, &iArg );
+
+#if DEBUG_MAIN
+    printf( "DEBUG: get path: %s\n", gpPath );
+#endif
 
             if( pBootSectorFileName )
             {
