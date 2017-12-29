@@ -386,12 +386,6 @@ bool doCopy( ProDOS_FileHeader_t *entry, const char *filename )
         size_t nExtLen      = 0;
         bool   bCopiedName  = false;
 
-#if DEBUG_MAIN
-    printf( "----------\n" );
-    printf( "+ %s\n", pSrcFileName );
-    printf( "  Len: \n", nSrcLen );
-    printf( "----------\n" );
-#endif
 
     // Chop extension down to leading '.' plus max 3 chars
     if( pExt )
@@ -508,10 +502,14 @@ void readVolume( int nArg, const char *aArg[], int *iArg )
             errorBadDisk();
     }
 
+#if DEBUG_MAIN
+    printf( "nArg: %d\n",  nArg );
+    printf( "iArg: %d\n", *iArg );
+#endif
     gpPath = getVirtualPath( nArg, aArg, iArg, true );
 
 #if DEBUG_MAIN
-    printf( "path: %s\n", gpPath );
+    printf( "virtual path: %s\n", gpPath );
 #endif
 
     prodos_GetVolumeHeader( &gVolume, PRODOS_ROOT_BLOCK );
