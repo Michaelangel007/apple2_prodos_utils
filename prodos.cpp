@@ -710,6 +710,8 @@ int main( const int nArg, const char *aArg[] )
                     else
                         return printf( "ERROR: Unknown option: %s\n", pArg );
                 }
+                else
+                    break;
             }
 
             readVolume( nArg, aArg, &iArg );
