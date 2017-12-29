@@ -14,6 +14,10 @@
     #include "prodos.tools.cpp"
 
 /*
+TODO:
+    -meta <filename>   Use these file attributes instead of default <file>._META
+    -nometa            Do not generate <file>._META when extracting via 'get'
+
 Is this still needed?
     -path /
 */
