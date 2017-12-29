@@ -396,17 +396,49 @@ bool doCopy( ProDOS_FileHeader_t *entry, const char *filename )
         nExtLen = nLen;
     }
 
+    const char *pBaseName = filename + nSrcLen;
+    size_t      nBaseLen  = 0;
+
+    // Chop off preceeding directory if there is one
+    if( pBaseName )
+    {
+        while( pBaseName > filename )
+        {
+            if( *pBaseName == '/' )
+                break;
+
+            pBaseName--;
+            nBaseLen ++;
+        }
+    }
+
+#if DEBUG_MAIN
+    printf( "----------\n" );
+    printf( "Extension: %d\n", pExt != NULL );
+    printf( "+ %s\n"     , pSrcFileName );
+    printf( "  Len: %u\n", nSrcLen      );
+    printf( " Base: %s\n", pBaseName    );
+    printf( "  Len: %u\n", nBaseLen     );
+    printf( "----------\n" );
+#endif
+
     if( nSrcLen > 15 )
     {
+        nBaseLen  = nSrcLen - nExtLen;
+
         // Chop off part of name until it fits
+        {
+            pBaseName++;
+            nBaseLen --;
+        }
 
         // If we have an extension, chop the prefix preserving extension
         // If no extension, chop the prefix
         if( pExt )
         {
             int end  = nSrcLen - 4;
-            int len1 = string_CopyUpper( gEntry.name +   0, pSrcFileName, end );
-            int len2 = string_CopyUpper( gEntry.name + end, pExt              );
+            int len1 = string_CopyUpper( gEntry.name +   0, pBaseName, nBaseLen );
+            int len2 = string_CopyUpper( gEntry.name + end, pExt                );
 
             gEntry.len = len1 + len2;
             bCopiedName = true;
