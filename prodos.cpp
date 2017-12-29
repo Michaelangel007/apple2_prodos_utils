@@ -480,7 +480,7 @@ bool doCopy( ProDOS_FileHeader_t *entry, const char *filename )
             if( bFoundExt )
             {
 #if DEBUG_MAIN
-printf( "Auto-detect file type: $%02X %s\n", iExt, tExt );
+    printf( "Auto-detect file type: $%02X %s\n", iExt, tExt );
 #endif
                 gEntry.type = iExt;
                 break;
