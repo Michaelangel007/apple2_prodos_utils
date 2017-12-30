@@ -681,7 +681,7 @@ void prodos_Summary( ProDOS_VolumeHeader_t *volume, int files, int iFirstFree )
 
     // Max files in (65,535-2) blocks * 13 files/block = 851,929 directory entries
 
-    printf( "========\n" );
+    printf( " ===============\n" );
     printf( "Files:  %7s / %s", itoa_comma( files ), itoa_comma( gnLastDirMaxFiles ) );
     printf( " (%5.2f%%)\n"    , (100. * files) / max );
     printf( "Blocks: \n" );
