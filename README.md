@@ -1,4 +1,4 @@
-# Apple 2 Prodos Utils
+# Apple 2 ProDOS (Virtual Disk) Utilities
 
 **NOTE:** This is still a work-in-progress.
 
