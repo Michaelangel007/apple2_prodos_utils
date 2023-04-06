@@ -495,7 +495,7 @@ int prodos_FindFile( ProDOS_VolumeHeader_t *volume, const char *path, int base =
     // Get path head
     int  iDirName = nPathLen;
     char sDirName[16];
-    int  i;
+    size_t i;
 
     // Split path
     for( i = 0; i < nPathLen; i++ )
@@ -1436,7 +1436,7 @@ void ProDOS_Init( const char *path )
     int iOffset;
 
     // Init Bitmap
-    gVolume.meta.bitmap_block = PRODOS_ROOT_BLOCK + nRootDirBlocks;
+    gVolume.meta.bitmap_block = (uint16_t) (PRODOS_ROOT_BLOCK + nRootDirBlocks);
     int nBitmapBlocks = prodos_BlockInitFree( &gVolume );
 
     // Set boot blocks as in-use
@@ -1490,7 +1490,7 @@ void ProDOS_Init( const char *path )
 #endif
 
     gVolume.entry_len = 0x27;
-    gVolume.entry_num = PRODOS_BLOCK_SIZE / gVolume.entry_len;
+    gVolume.entry_num = (uint8_t) (PRODOS_BLOCK_SIZE / gVolume.entry_len);
 
     // Note:
     // .file_count = 0, since no files added
@@ -1501,7 +1501,7 @@ void ProDOS_Init( const char *path )
     size_t nLen = strlen( path );
 
     gVolume.kind = ProDOS_KIND_ROOT;
-    gVolume.len  = nLen;
+    gVolume.len  = (uint8_t) nLen;
     string_CopyUpper( gVolume.name, path, 15 );
 
     gVolume.access = 0

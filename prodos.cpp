@@ -464,7 +464,7 @@ bool doCopy( ProDOS_FileHeader_t *entry, const char *filename )
 
     if( !bCopiedName )
     {
-        gEntry.len = string_CopyUpper( gEntry.name, pSrcFileName );
+        gEntry.len = (uint8_t) string_CopyUpper( gEntry.name, pSrcFileName );
     }
 
 #if DEBUG_MAIN
