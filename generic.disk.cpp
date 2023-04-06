@@ -3,7 +3,7 @@
 #define DEBUG_DSK_SAVE       0
 #define DEBUG_DSK_INTERLEAVE 0
 
-#ifdef __WIN32
+#ifdef _WIN32
 #else
     // OSX / BSD / Linux
     #define stricmp strcasecmp
