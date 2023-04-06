@@ -1,3 +1,11 @@
+#ifdef _WIN32
+    #define _CRT_SECURE_NO_WARNINGS   1
+    #define _CRT_NONSTDC_NO_DEPRECATE 1 //  error C4996: '_stricmp': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _stricmp.
+
+    //#define stricmp  _stricmp
+    //#pragma warning(suppress : 4996)
+#endif
+
 #define DEBUG_MAIN 0
 
     #include <stdio.h>    // printf()
