@@ -141,17 +141,17 @@ Given these steps ...
 ... it will produce this output
 
 ```
-dnb??iwr /TEST            Blocks Size    Type    Aux   Kind  iNode Dir   Ver Min  Create    Time    Modified  Time  
--------- ---------------- ------ ------- ------- ----- ----- ----- ----- --- ---  --------- ------  --------- ------
--------- *FOO1.TXT             1 $000002 TXT $04 $0000 sed 1 @0007 @0002 0.0 v00   6-NOV-17         <NO DATE>        
--------- *FOO2.TXT             1 $000002 TXT $04 $0000 sed 1 @0008 @0002 0.0 v00   6-NOV-17         <NO DATE>        
--------- *FOO3.TXT             1 $000002 TXT $04 $0000 sed 1 @0009 @0002 0.0 v00   6-NOV-17         <NO DATE>        
--------- *TEXT.BIN             3 $000264 BIN $06 $0000 sap 2 @000A @0002 0.0 v00   6-NOV-17         <NO DATE>        
-========
+Acc dnb??iwr /TEST            Blocks Size    Type    Aux   Kind  iNode Dir   Ver Min  Create    Time    Modified  Time
+--- -------- ---------------- ------ ------- ------- ----- ----- ----- ----- --- ---  --------- ------  --------- ------
+$C3 dn----wr  FOO1.TXT             1 $000002 TXT $04 $0000 sed 1 @0007 @0002 0.0 v00   6-APR-23         <NO DATE>
+$C3 dn----wr  FOO2.TXT             1 $000002 TXT $04 $0000 sed 1 @0008 @0002 0.0 v00   6-APR-23         <NO DATE>
+$C3 dn----wr  FOO3.TXT             1 $000002 TXT $04 $0000 sed 1 @0009 @0002 0.0 v00   6-APR-23         <NO DATE>
+$C3 dn----wr  SOFTBEEP.BIN         1 $000016 BIN $06 $0300 sed 1 @000A @0002 0.0 v00   6-APR-23         <NO DATE>
+ ===============
 Files:        4 / 52 ( 7.69%)
-Blocks: 
-   Free:    267 (95.36%), 1st: @ $000D = 13
-   Used:     13 ( 4.64%)
+Blocks:
+   Free:    269 (96.07%), 1st: @ $000B = 11
+   Used:     11 ( 3.93%)
   Total:    280
 ```
 
