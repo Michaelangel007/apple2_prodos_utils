@@ -23,7 +23,7 @@ Usage: <dsk> <command> [<options>] [<path>]
 
     cat      Catalog (short form)
                  [<path>]            Path of virtual sub-directory to view
-                                     Defaults to: /
+                                     NOTE: Defaults to: /
     catalog  Catalog (long form)
                  [<path>]            Path of virtual sub-directory to view
                                      NOTE: Defaults to: /
@@ -61,10 +61,11 @@ Usage: <dsk> <command> [<options>] [<path>]
                                          To delete a file see ........: rm
                                          To delete a sub-directory see: rmdir
     init     Format disk
-                 <path>              Name of virtual volume.
                  -size=140           Format 140 KB (5 1/4")
                  -size=800           Format 800 KB (3 1/2")
                  -size=32            Format 32  MB (Hard Disk)
+                 <path>              Name of virtual volume. You MUST specify this.
+                                     NOTE: Options must come first
     ls       Catalog (file names only)
                  [<path>]            Path to sub-directory to view
                                      Defaults to: /
