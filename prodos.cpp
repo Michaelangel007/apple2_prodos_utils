@@ -808,7 +808,7 @@ int main( const int nArg, const char *aArg[] )
             break;
 
         default:
-            if( nArg < 2 )
+            if( (nArg < 2) || !pCommand )
                 return usage();
             else
                 return printf( "ERROR: Unknown command: %s\n", pCommand );
