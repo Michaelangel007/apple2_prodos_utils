@@ -504,6 +504,7 @@ bool doCopy( ProDOS_FileHeader_t *entry, const char *filename )
     }
 
 #if DEBUG_MAIN
+    printf( "File Access: $%02X\n", gEntry.access );
 #endif
 
     bool bStatus = ProDOS_FileAdd( gpPath, pSrcFileName, &gEntry );
