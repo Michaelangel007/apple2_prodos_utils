@@ -121,7 +121,7 @@ Examples:
 
 Given these steps ...
 
-``
+```
     echo. > foo1.txt
     echo. > foo2.txt
     echo. > foo3.txt
@@ -141,9 +141,9 @@ Given these steps ...
 
 ... it will produce this output:
 
-```txt
+```
 Acc dnb??iwr /TEST            Blocks Size    Type    Aux   Kind  iNode Dir   Ver Min  Create    Time    Modified  Time
----\ -------- ---------------- ------ ------- ------- ----- ----- ----- ----- --- ---  --------- ------  --------- ------
+--- -------- ---------------- ------ ------- ------- ----- ----- ----- ----- --- ---  --------- ------  --------- ------
 $C3 dn----wr  FOO1.TXT             1 $000002 TXT $04 $0000 sed 1 @0007 @0002 0.0 v00   6-APR-23         <NO DATE>
 $C3 dn----wr  FOO2.TXT             1 $000002 TXT $04 $0000 sed 1 @0008 @0002 0.0 v00   6-APR-23         <NO DATE>
 $C3 dn----wr  FOO3.TXT             1 $000002 TXT $04 $0000 sed 1 @0009 @0002 0.0 v00   6-APR-23         <NO DATE>
