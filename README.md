@@ -97,27 +97,48 @@ e.g.
 
 Three different disk sizes are accepted for init
 
-   prodos test.dsk init -size=140   # 5 1/4"  (140 KB)
-   prodos test.dsk init -size=800   # 3 1/2"  (800 KB)
-   prodos test.dsk init -size=32    #HardDisk ( 32 MB)
+   prodosfs test.dsk init -size=140 /TEST514   # 5 1/4"  (140 KB)
+   prodosfs test.dsk init -size=800 /TEST312   # 3 1/2"  (800 KB)
+   prodosfs test.dsk init -size=32  /TEST32M   #HardDisk ( 32 MB)
 
 Examples:
 
-    prodos test.dsk ls
-    prodos test.dsk cat
-    prodos test.dsk cp    foo1 foo2 /
-    prodos test.dsk mkdir bar
-    prodos test.dsk cp    foo2      /bar
-    prodos test.dsk get   /bar/foo2
-    prodos test.dsk rm    /bar/foo2
-    prodos test.dsk rmdir /bar
-    prodos test.dsk init  /TEST
-    prodos b140.dsk init  -size=140 /BLANK140
-    prodos b800.dsk init  -size=800 /BLANK800
-    prodos b032.dsk init  -size=32  /BLANK32
+    prodosfs test.dsk init  /TEST
+    prodosfs test.dsk ls
+    prodosfs test.dsk cat
+    prodosfs test.dsk cp    foo1 foo2 /
+    prodosfs test.dsk mkdir bar
+    prodosfs test.dsk cp    foo2      /bar
+    prodosfs test.dsk get   /bar/foo2
+    prodosfs test.dsk rm    /bar/foo2
+    prodosfs test.dsk rmdir /bar
+
+    prodosfs b140.dsk init  -size=140 /BLANK140
+    prodosfs b800.dsk init  -size=800 /BLANK800
+    prodosfs b032.dsk init  -size=32  /BLANK32
 ```
 
-Example output:
+Given these steps ...
+
+``
+    echo. > foo1.txt
+    echo. > foo2.txt
+    echo. > foo3.txt
+
+    REM Windows
+    echo a020a90220a8fc8d30c0a92420a8fc8d30c088d0ed60 > softbeep.hex
+    certutil.exe -f -v -decodehex                       softbeep.hex softbeep.bin
+    REM Windows
+
+    prodosfs test.dsk init  -size=140 /TEST
+    prodosfs test.dsk cp    foo1.txt /
+    prodosfs test.dsk cp    foo2.txt /
+    prodosfs test.dsk cp    foo3.txt /
+    prodosfs test.dsk cp -aux=$0300 softbeep.bin /
+    prodosfs test.dsk catalog
+```
+
+... it will produce this output
 
 ```
 dnb??iwr /TEST            Blocks Size    Type    Aux   Kind  iNode Dir   Ver Min  Create    Time    Modified  Time  
