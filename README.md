@@ -157,5 +157,32 @@ Blocks:
 
 # Building / Compiling
 
+* MacOS
+
 `make clean; make`
 
+Windows:
+
+Start Microsoft Visual Studio 2019 and open `MSVC2019\prodos.sln`.
+
+# Soft Beep
+
+```as
+
+		ORG $300
+SoftBeep 	LDY #$20
+SoftCycle	LDA #$02        ;+
+	        JSR Wait
+		STA Squeeker
+		LDA #$24
+		JSR Wait
+		STA Squeeker
+		DEY
+		BNE SoftCycle   ;^ $0904
+```
+
+Converted to ASCII hex dump
+
+```
+    certutil -encodehex -f softbeep softbeep.hex 12
+```
