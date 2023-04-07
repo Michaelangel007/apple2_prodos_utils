@@ -1,5 +1,7 @@
 # Apple 2 ProDOS (Virtual Disk) Utilities
 
+`ProdosFS` is a command-line utility to create and manipulate virtual ProDOS volume images for emulators.
+
 **NOTE:** This is still a work-in-progress.
 
 Commands that work:
@@ -24,11 +26,11 @@ Usage: <dsk> <command> [<options>] [<path>]
                                      Defaults to: /
     catalog  Catalog (long form)
                  [<path>]            Path of virtual sub-directory to view
-                                     Defaults to: /
-    cp       Add file(s) to volume
-                 <path>              Destination virutal sub-directory to add to
-                                     There is no default -- it must be specified
+                                     NOTE: Defaults to: /
+    cp       Add file(s) to volume   File type will auto-detected based on filename extension.
+                                     i.e. BAS, BIN, FNT, TXT,SYS, etc.
                  -access=$##         Set access flags
+                                     NOTE: Defaults to $C3
                                          $80 Volume/file can be destroyed
                                          $40 Volume/file can be renamed
                                          $20 Volume/file changed since last backup
@@ -47,6 +49,9 @@ Usage: <dsk> <command> [<options>] [<path>]
                  -type=$##           Force file type to one of the 256 types
                  -moddate=MM/DD/YY   Set last modified date to specified date
                  -modtime=HH:MM      Set last modified date to specified time
+                 <path>              Destination virutal sub-directory to add to
+                                     There is no default -- it must be specified
+                                     NOTE: Options must come first
     dir      Catalog (long form)
                                      This is an alias for 'catalog'
     get      Extract file from volume
