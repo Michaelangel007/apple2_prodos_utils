@@ -279,6 +279,14 @@ if( block == PRODOS_ROOT_BLOCK )
     void prodos_InitFileHeader( ProDOS_FileHeader_t *entry )
     {
         memset( entry, 0, sizeof( ProDOS_FileHeader_t ) );
+
+        // Default ot Read/Write/Rename/Destroy
+        entry->access = 0
+            | ACCESS_D
+            | ACCESS_N
+            | ACCESS_W
+            | ACCESS_R
+            ;
     }
 
 // Globals ________________________________________________________________
