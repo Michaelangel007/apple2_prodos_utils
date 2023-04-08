@@ -157,7 +157,7 @@ Is this still needed?
         , NULL
     };
 
-    char        sPath[ 256 ] = "/"; // TODO: What is max ProDOS path?
+    char        sPath[ 256 ] = "/"; // TODO: What is max ProDOS path? 128 characters?
     const char *gpPath = NULL;
 
     int gnDay   = 0;
