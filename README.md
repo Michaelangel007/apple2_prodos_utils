@@ -1,6 +1,8 @@
 # Apple 2 ProDOS (Virtual Disk) Utilities
 
-`ProdosFS` is a command-line utility to create and manipulate virtual ProDOS volume images for emulators.
+`ProdosFS` is a command-line utility to create and manipulate virtual ProDOS volume images for emulators.  The file system is Apple's ProDOS hence the name.
+
+It is written in standard C++ so no bloated shenanigans like Java or Python are needed.
 
 **NOTE:** This is still a work-in-progress.
 
@@ -16,10 +18,9 @@ Commands that work:
 
 Commands yet to be implemented:
 
-* [ ] mkdir
+* [ ] md, mkdir
 * [ ] rm
-* [ ] rmdir
-
+* [ ] rd, rmdir
 
 ```
 Usage: <dsk> <command> [<options>] [<path>]
@@ -73,12 +74,14 @@ Usage: <dsk> <command> [<options>] [<path>]
                  [<path>]            Path to sub-directory to view
                                      Defaults to: /
     mkdir    Create a sub-directory
+                                     NOTE: Not-implemented yet!
                  <path>              Destination virutal sub-directory to create
                                      There is no default -- it must be specified
     rm       Delete file from volume
                  <path>              Path of virtual file to delete
                                      There is no default -- it must be specified
     rmdir    Remove a sub-directory
+                                     NOTE: Not-implemented yet!
                  <path>              Path of virtual sub-directory to delete
                                      There is no default -- it must be specified
                                      NOTE:
