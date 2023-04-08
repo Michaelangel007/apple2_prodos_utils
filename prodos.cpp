@@ -130,12 +130,14 @@ Is this still needed?
 "                 [<path>]            Path to sub-directory to view\n"
 "                                     Defaults to: /\n"
         , // DIR__CREATE
+"                                     NOTE: Not implemented yet!\n"
 "                 <path>              Destination virutal sub-directory to create\n"
 "                                     There is no default -- it must be specified\n"
         , // FILE_DELETE
 "                 <path>              Path of virtual file to delete\n"
 "                                     There is no default -- it must be specified\n"
         , // DIR__DELETE
+"                                     NOTE: Not implemented yet!\n"
 "                 <path>              Path of virtual sub-directory to delete\n"
 "                                     There is no default -- it must be specified\n"
 "                                     NOTE:\n"

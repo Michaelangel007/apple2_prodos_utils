@@ -74,14 +74,14 @@ Usage: <dsk> <command> [<options>] [<path>]
                  [<path>]            Path to sub-directory to view
                                      Defaults to: /
     mkdir    Create a sub-directory
-                                     NOTE: Not-implemented yet!
+                                     NOTE: Not implemented yet!
                  <path>              Destination virutal sub-directory to create
                                      There is no default -- it must be specified
     rm       Delete file from volume
                  <path>              Path of virtual file to delete
                                      There is no default -- it must be specified
     rmdir    Remove a sub-directory
-                                     NOTE: Not-implemented yet!
+                                     NOTE: Not implemented yet!
                  <path>              Path of virtual sub-directory to delete
                                      There is no default -- it must be specified
                                      NOTE:
