@@ -40,8 +40,10 @@ Is this still needed?
         ,DISK_COMMAND_VOL_INIT      // init
         ,DISK_COMMAND_CAT_NAMES     // ls
         ,DISK_COMMAND_DIR_CREATE    // mkdir
+        ,DISK_COMMAND_DIR_CREATE2   // md
         ,DISK_COMMAND_FILE_DELETE   // rm
         ,DISK_COMMAND_DIR_DELETE    // rmdir
+        ,DISK_COMMAND_DIR_DELETE2   // rd
         ,DISK_COMMAND_INVALID
         ,NUM_DISK_COMMANDS
     };
@@ -56,8 +58,10 @@ Is this still needed?
         ,"init"    // VOL__INIT
         ,"ls"      // CAT__NAMES
         ,"mkdir"   // DIR__CREATE
+        ,"md"      // DIR__CREATE2
         ,"rm"      // FILE_DELETE
         ,"rmdir"   // DIR__DELETE
+        ,"rd"      // DIR__DELETE2
         ,""
     };
 
@@ -71,8 +75,10 @@ Is this still needed?
         ,"Format disk"               // VOL__INIT
         ,"Catalog (file names only)" // CAT__NAMES
         ,"Create a sub-directory"    // DIR__CREATE
+        ,"Create a sub-directory"    // DIR__CREATE2
         ,"Delete file from volume"   // FILE_DELETE
         ,"Remove a sub-directory"    // DIR__DELETE
+        ,"Remove a sub-directory"    // DIR__DELETE2
         ,""                          // NUM_DISK_COMMANDS
     };
 
@@ -133,6 +139,8 @@ Is this still needed?
 "                                     NOTE: Not implemented yet!\n"
 "                 <path>              Destination virutal sub-directory to create\n"
 "                                     There is no default -- it must be specified\n"
+        , // DIR__CREATE2
+"                                     Alias for mkdir\n"
         , // FILE_DELETE
 "                 <path>              Path of virtual file to delete\n"
 "                                     There is no default -- it must be specified\n"
@@ -144,6 +152,8 @@ Is this still needed?
 "                                         You can't delete the root directory: /\n"
 "                 -f                  Force removal of sub-directory\n"
 "                                     (Normally a sub-directory must be empty)\n"
+        , // DIR__DELETE2
+"                                     Alias for rmdir\n"
         , NULL
     };
 
