@@ -10,9 +10,12 @@ Commands that work:
 * [x] catalog
 * [x] cp  (Only Seed (file size <= 512 bytes), and Sapling files (file size <= 128 KB) are currently supported)
 * [x] dir
-* [ ] get
+* [x] get
 * [x] init
 * [x] ls
+
+Commands yet to be implemented:
+
 * [ ] mkdir
 * [ ] rm
 * [ ] rmdir
