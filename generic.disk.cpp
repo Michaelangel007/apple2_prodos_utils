@@ -25,6 +25,7 @@
 
     size_t      gnDskSize = 0;
     uint8_t     gaDsk[ DSK_SIZE_32M ];
+    uint8_t     gaTmp[ DSK_SECTOR_SIZE * 2 ];
 
     uint16_t DskGet16( int offset )
     {

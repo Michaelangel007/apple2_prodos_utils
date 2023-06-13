@@ -1432,10 +1432,10 @@ void ProDOS_Init( const char *path )
 {
     // Zero disk
     memset( gaDsk, 0, gnDskSize );
+    memset( gaTmp, 0, PRODOS_BLOCK_SIZE );
 
     // Copy Boot Sector
     // TODO: Use ProDOS 2.4.1 boot sector
-
 
     // Create blocks for root directory
     int nRootDirBlocks = 4;
