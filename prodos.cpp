@@ -94,7 +94,7 @@ Is this still needed?
 "                                     File type will auto-detected based on filename extension.\n"
 "                                     i.e. BAS, BIN, FNT, TXT,SYS, etc.\n"
 "                 -access=$##         Set access flags\n"
-"                                     NOTE: Defaults to $C3"
+"                                     NOTE: Defaults to $C3\n"
 "                                         $80 Volume/file can be destroyed\n"
 "                                         $40 Volume/file can be renamed\n"
 "                                         $20 Volume/file changed since last backup\n"
