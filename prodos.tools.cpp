@@ -166,7 +166,7 @@ if( block == PRODOS_ROOT_BLOCK )
     struct ProDOS_FileHeader_t
     {                           ; //Rel Size Hex
         uint8_t  kind           ; // +0    1 $00  \ Hi nibble Storage Type
-        uint8_t  len            ; // +0           / Lo nibble
+        uint8_t  len            ; // +0           / Lo nibble Filename Length
         char     name[ 16 ]     ; // +1   15 $05  15 on disk but we NULL terminate for convenience
 // --- diff from volume ---
         uint8_t  type           ; //+16    1 $10              User Type
@@ -1626,7 +1626,7 @@ void ProDOS_Init( const char *path )
 
 
 // Read T0S0 and save it to a file on the host
-// @returns 0 if succes
+// @returns true if succes
 // ========================================================================
 bool ProDOS_ExtractBootSector( const char *pBootSectorFileName )
 {

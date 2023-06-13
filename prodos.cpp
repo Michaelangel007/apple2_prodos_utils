@@ -156,6 +156,7 @@ Is this still needed?
 "                                     (Normally a sub-directory must be empty)\n"
         , // DIR__DELETE2
 "                                     Alias for rmdir\n"
+"                                     NOTE: Not implemented yet!\n"
         , NULL
     };
 
