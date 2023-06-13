@@ -122,16 +122,18 @@ Is this still needed?
         , //CAT_LONG2
 "                                     This is an alias for 'catalog'\n"
         ,// FILE_GET
+"                 [-boot=<file>]      Optional: extract boot sector to file\n"
 "                 <path>              Path of virtual file to extract\n"
 "                                     NOTES:\n"
 "                                         The file remains on the virtual volume\n"
 "                                         To delete a file see ........: rm\n"
 "                                         To delete a sub-directory see: rmdir\n"
         , // VOL__INIT
-"                 <path>              Name of virtual volume.\n"
+"                 [-boot=<file>]      Optional: replace boot sector with file\n"
 "                 -size=140           Format 140 KB (5 1/4\")\n"
 "                 -size=800           Format 800 KB (3 1/2\")\n"
 "                 -size=32            Format 32  MB (Hard Disk)\n"
+"                 <path>              Name of virtual volume.\n"
         , // CAT__NAMES
 "                 [<path>]            Path to sub-directory to view\n"
 "                                     Defaults to: /\n"
@@ -206,6 +208,12 @@ int usage()
 "   prodosfs test.dsk init -size=140 /TEST514   # 5 1/4\"  (140 KB)\n"
 "   prodosfs test.dsk init -size=800 /TEST312   # 3 1/2\"  (800 KB)\n"
 "   prodosfs test.dsk init -size=32  /TEST32M   #HardDisk ( 32 MB)\n"
+"\n"
+"To put a (512) boot sector file use -boot with the init command:\n"
+"   prodosfs test.dsk init -boot=bootsector.bin -size=140 /TEST514\n"
+"\n"
+"To get a (512) boot sector file use -boot with the cp command:\n"
+"   prodosfs test.dsk cp   -boot=bootsector.bin           /TEST514\n"
 "\n"
 "Examples:\n"
 "\n"
@@ -757,16 +765,14 @@ int main( const int nArg, const char *aArg[] )
 #endif
 
             if( pBootSectorFileName )
-            {
                 ProDOS_ExtractBootSector( pBootSectorFileName );
-//              loaded = ProDOS_ReplaceBootSector( pBootSectorFileName );
-//              if( loaded ) DskSave();
-            }
             else
                 ProDOS_FileExtract( gpPath ); // pathname_filename
             break;
         }
+
         case DISK_COMMAND_VOL_INIT:
+        {
             gnDskSize            = DSK_SIZE_312; // TODO: --size=140 --size=800 --size=32
             if( !DskGetInterleave( gpDskName ) )
                 errorBadInterleave();
@@ -774,6 +780,7 @@ int main( const int nArg, const char *aArg[] )
 #if DEBUG_MAIN
     printf( "iArg: %d / %d\n", iArg, nArg );
 #endif
+            const char *pBootSectorFileName = NULL;
 
             for( ; iArg < nArg; iArg++ )
             {
@@ -785,6 +792,14 @@ int main( const int nArg, const char *aArg[] )
 
                 if( pArg[0] == '-' )
                 {
+                    if( strncmp( pArg+1,"boot=", 5 ) == 0 )
+                    {
+                        if( pBootSectorFileName )
+                            printf( "ERROR: Already have boot sector filename. Skipping.\n" );
+                        else
+                            pBootSectorFileName = pArg + 6;
+                    }
+                    else
                     if( strncmp( pArg+1,"size=", 5 ) == 0 )
                     {
                         int size = atoi( pArg + 6 );
@@ -814,12 +829,19 @@ int main( const int nArg, const char *aArg[] )
             if( gpPath )
             {
                 ProDOS_Init( gpPath );
+                if( pBootSectorFileName )
+                {
+                    bool bReplaced = ProDOS_ReplaceBootSector( pBootSectorFileName );
+                    if( !bReplaced )
+                        printf( "ERROR: Couldn't replace boot sector\n" );
+                }
                 DskSave();
             }
             else
                 return printf( "ERROR: Need virtual volume name. e.g. /TEST\n" );
 
             break;
+        }
 
         default:
             if( (nArg < 2) || !pCommand )

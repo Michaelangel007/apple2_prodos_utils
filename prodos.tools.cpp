@@ -1453,7 +1453,7 @@ bool ProDOS_FileExtract( const char *path )
         printf( "ERROR: Couldn't open data file for writing: %s\n", pEntry->name );
         return false;
     }
-
+    else
     {
         switch( kind )
         {
@@ -1638,7 +1638,24 @@ bool ProDOS_ExtractBootSector( const char *pBootSectorFileName )
         return false;
     }
 
-    fwrite( &gaDsk[ 0 ], 1, 256, pDstFile );
+    const size_t BLOCK_0_BEG = 0x0*DSK_SECTOR_SIZE;
+    const size_t BLOCK_0_END = 0x1*DSK_SECTOR_SIZE;
+
+    fwrite( &gaDsk[ BLOCK_0_BEG ], 1, 256, pDstFile );
+    fwrite( &gaDsk[ BLOCK_0_END ], 1, 256, pDstFile );
+
+#if _DEBUG
+    for( int sector = 0; sector < 16; ++sector )
+    {
+        printf( "T0S%1X: ", sector );
+        for( int byte = 0; byte < 4; ++byte )
+        {
+            printf( "%02X ", gaDsk[ sector*DSK_SECTOR_SIZE + byte ] );
+        }
+        printf( "\n" );
+    }
+#endif
+
     fclose( pDstFile );
 
     return true;
@@ -1660,22 +1677,53 @@ bool ProDOS_ReplaceBootSector( const char *pBootSectorFileName )
 
     size_t size = File_Size( pSrcFile );
 
-    // size < 256
-    memset( &gaDsk[ 0 ], 0, 256 );
-    if( size < 256 )
-        printf( "INFO.: Boot sector < 256 bytes. Padding boot sector with zeroes.\n" );
+    const size_t BLOCK_0_BEG = 0x0*DSK_SECTOR_SIZE;
+    const size_t BLOCK_0_END = 0x1*DSK_SECTOR_SIZE;
 
-    // size >= 256
-    if( size > 255 )
+    memset( &gaDsk[ BLOCK_0_BEG ], 0, 256 ); // Block 0 Beg = T0S0
+    memset( &gaDsk[ BLOCK_0_END ], 0, 256 ); // Block 0 End = T0SE
+
+    if( size < 512 )
+        printf( "INFO.: Boot sector < 512 bytes. Padding boot sector with zeroes.\n" );
+
+    if( size > 512 )
     {
-        printf( "WARNING: Boot sector > 255 bytes. Truncating to first 256 bytes.\n" );
-        size = 256;
+        printf( "WARNING: Boot sector > 512 bytes. Truncating to first 512 bytes.\n" );
+        size = 512;
     }
 
-    fread( &gaDsk[ 0 ], 1, size, pSrcFile );
+    const size_t prefix = min( size    , 256 );
+    const size_t suffix = min( size-256, 256 );
+
+#if _DEBUG
+    printf( "prefix: $%02X (#%3d)\n", (int) prefix & 0xFF, (int) prefix );
+    printf( "suffix: $%02X (#%3d)\n", (int) prefix & 0xFF, (int) suffix );
+#endif
+
+    if( prefix ) fread( &gaDsk[ BLOCK_0_BEG ], 1, prefix, pSrcFile );
+    if( suffix ) fread( &gaDsk[ BLOCK_0_END ], 1, suffix, pSrcFile );
+
+#if 0
+    if (size <= 256)
+    {
+        fread( &gaDsk[ BLOCK_0_BEG ], 1, size, pSrcFile );
+    }
+    else
+    {
+        // First 256 bytes to T0S0
+        fread( &gaDsk[ BLOCK_0_BEG ], 1, 256, pSrcFile );
+
+        // Second 256 bytes to T0SE
+        if( size < 512 )
+            fread( &gaDsk[ BLOCK_0_END ], 1, size, pSrcFile );
+        else
+            fread( &gaDsk[ BLOCK_0_END ], 1, 512, pSrcFile );
+    }
+#endif
+
     fclose( pSrcFile );
 
-    // Caller will do: DskSave();
+    // NOTE: Caller will do: DskSave();
 
     return true;
 }
