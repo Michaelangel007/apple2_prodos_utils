@@ -515,6 +515,8 @@ bool doCopy( ProDOS_FileHeader_t *entry, const char *filename )
         }
     }
 
+    prodos_MetaLoad( &gEntry );
+
 #if DEBUG_MAIN
     printf( "File Access: $%02X\n", gEntry.access );
 #endif

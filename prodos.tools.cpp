@@ -1,4 +1,5 @@
 #define DEBUG_ADD       0
+#define DEBUG_ATTRIB    0
 #define DEBUG_BITMAP    0
 #define DEBUG_DATE      0
 #define DEBUG_DIR       0
@@ -16,7 +17,8 @@
     ProDOS_*    Public  functions
 */
 
-
+#define min(a,b) ((a < b) ? a : b)
+#define max(a,b) ((a < b) ? b : a)
 
 // --- ProDOS crap ---
 
@@ -671,6 +673,95 @@ if( bitmap )
 
 
 // ------------------------------------------------------------------------
+void prodos_MetaGetFileName( ProDOS_FileHeader_t *pEntry, char sAttrib[ PRODOS_MAX_PATH ] )
+{
+    if( !pEntry )
+        return;
+
+    // Attribute meta-data
+    const char   sExt[] = "._META";
+    const size_t nExt   = strlen( sExt );
+    int          nAttrib = string_CopyUpper( sAttrib +       0, pEntry->name, pEntry->len );
+    /* */                  string_CopyUpper( sAttrib + nAttrib, sExt        , nExt        );
+}
+
+// ------------------------------------------------------------------------
+bool prodos_MetaLoad(ProDOS_FileHeader_t* pEntry)
+{
+    char sAttrib[ PRODOS_MAX_PATH ];
+    prodos_MetaGetFileName( pEntry, sAttrib );
+
+    printf( "Loading meta... %s\n", sAttrib );
+    FILE *pFileMeta = fopen( sAttrib, "r" );
+
+    if( !pFileMeta )
+    {
+        printf( "INFO.: Couldn't open attribute file for reads: %s\n", sAttrib );
+        return false;
+    }
+
+    int value;
+
+    fscanf( pFileMeta, "access  = $%X\n", &value ); pEntry->access   = value; // 02
+    fscanf( pFileMeta, "aux     = $%X\n", &value ); pEntry->aux      = value; // 04
+    fscanf( pFileMeta, "type    = $%X\n", &value ); pEntry->type     = value; // 02
+    fscanf( pFileMeta, "kind    = $%X\n", &value ); pEntry->kind     = value; // 02
+    fscanf( pFileMeta, "date    = $%X\n", &value ); pEntry->date     = value; // 04
+    fscanf( pFileMeta, "time    = $%X\n", &value ); pEntry->time     = value; // 04
+    fscanf( pFileMeta, "version = $%X\n", &value ); pEntry->cur_ver  = value; // 02
+    fscanf( pFileMeta, "minver  = $%X\n", &value ); pEntry->min_ver  = value; // 02
+    fscanf( pFileMeta, "moddate = $%X\n", &value ); pEntry->mod_date = value; // 04
+    fscanf( pFileMeta, "modtime = $%X\n", &value ); pEntry->mod_time = value; // 04
+
+#if DEBUG_ATTRIB
+    printf( "access  = $%02X\n", pEntry->access   );
+    printf( "aux     = $%04X\n", pEntry->aux      );
+    printf( "type    = $%02X\n", pEntry->type     );
+    printf( "kind    = $%02X\n", pEntry->kind     );
+    printf( "date    = $%04X\n", pEntry->date     );
+    printf( "time    = $%04X\n", pEntry->time     );
+    printf( "version = $%02X\n", pEntry->cur_ver  );
+    printf( "minver  = $%02X\n", pEntry->min_ver  );
+    printf( "moddate = $%04X\n", pEntry->mod_date );
+    printf( "modtime = $%04X\n", pEntry->mod_time );
+#endif
+
+    fclose( pFileMeta );
+    return true;
+}
+
+// ------------------------------------------------------------------------
+bool prodos_MetaSave( ProDOS_FileHeader_t *pEntry )
+{
+    char sAttrib[ PRODOS_MAX_PATH ];
+    prodos_MetaGetFileName( pEntry, sAttrib );
+
+    printf( "Saving meta... %s\n", sAttrib );
+    FILE *pFileMeta = fopen( sAttrib, "w+b" );
+
+    if( !pFileMeta )
+    {
+        printf( "ERROR: Couldnt' open attribute file for writing: %s\n", sAttrib );
+        return false;
+    }
+
+    fprintf( pFileMeta, "access  = $%02X\n", pEntry->access   );
+    fprintf( pFileMeta, "aux     = $%04X\n", pEntry->aux      );
+    fprintf( pFileMeta, "type    = $%02X\n", pEntry->type     );
+    fprintf( pFileMeta, "kind    = $%02X\n", pEntry->kind     );
+    fprintf( pFileMeta, "date    = $%04X\n", pEntry->date     );
+    fprintf( pFileMeta, "time    = $%04X\n", pEntry->time     );
+    fprintf( pFileMeta, "version = $%02X\n", pEntry->cur_ver  );
+    fprintf( pFileMeta, "minver  = $%02X\n", pEntry->min_ver  );
+    fprintf( pFileMeta, "moddate = $%04X\n", pEntry->mod_date );
+    fprintf( pFileMeta, "modtime = $%04X\n", pEntry->mod_time );
+
+    fclose( pFileMeta );
+    return true;
+}
+
+
+// ------------------------------------------------------------------------
 void prodos_Summary( ProDOS_VolumeHeader_t *volume, int files, int iFirstFree )
 {
     if( !volume )
@@ -1117,6 +1208,9 @@ bool ProDOS_FileAdd( const char *to_path, const char *from_filename, ProDOS_File
     int    iIndexBase   = 0; // Single Index
     int    iMasterIndex = 0; // master block points to N IndexBlocks
 
+#if DEBUG_ATTRIB
+    printf( "Source File Size: %06X (%d)\n", nSrcSize, nSrcSize );
+#endif
 
     if( nSrcSize > gnDskSize )
     {
@@ -1304,7 +1398,7 @@ void ProDOS_FileDelete( const char *path )
 
 
 // Copy a file from the virtual file system back to the host
-// ProDOS attributes are saved in file.prodos_meta
+// ProDOS attributes are saved in <file>._META
 // ========================================================================
 bool ProDOS_FileExtract( const char *path )
 {
@@ -1343,34 +1437,8 @@ bool ProDOS_FileExtract( const char *path )
         return false;
     }
 
-    const char   sExt[] = "._meta";
-    const size_t nExt   = strlen( sExt );
-    /* */ char   sAttrib[ PRODOS_MAX_PATH ];
-    int          nAttrib = string_CopyUpper( sAttrib +       0, pEntry->name, pEntry->len );
-    /* */                  string_CopyUpper( sAttrib + nAttrib, sExt        , nExt        );
-
-    printf( "Saving meta... %s\n", sAttrib );
-    FILE *pFileMeta = fopen( sAttrib, "w+b" );
-
-    if( !pFileMeta )
-    {
-        printf( "ERROR: Couldnt' open attribute file for writing: %s\n", sAttrib );
+    if( !prodos_MetaSave( pEntry ) )
         return false;
-    }
-
-    // TODO: Sync these up with <file>._META ProDOS_FileExtract() and getCopyConfig()
-    fprintf( pFileMeta, "access  = $%02X\n", pEntry->access   );
-    fprintf( pFileMeta, "aux     = $%04X\n", pEntry->aux      );
-    fprintf( pFileMeta, "type    = $%02X\n", pEntry->type     );
-    fprintf( pFileMeta, "kind    = $%02X\n", pEntry->kind     );
-    fprintf( pFileMeta, "date    = $%04X\n", pEntry->date     );
-    fprintf( pFileMeta, "time    = $%04X\n", pEntry->time     );
-    fprintf( pFileMeta, "version = $%02X\n", pEntry->cur_ver  );
-    fprintf( pFileMeta, "minver  = $%02X\n", pEntry->min_ver  );
-    fprintf( pFileMeta, "moddate = $%04X\n", pEntry->mod_date );
-    fprintf( pFileMeta, "modtime = $%04X\n", pEntry->mod_time );
-    fclose( pFileMeta );
-
 
     int addr = pEntry->inode * PRODOS_BLOCK_SIZE;
     int size = pEntry->size;
