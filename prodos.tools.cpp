@@ -1465,15 +1465,36 @@ bool ProDOS_FileExtract( const char *path )
             case ProDOS_KIND_SAPL: // <= 128 KB
             {
                 int nBlock = pEntry->blocks - 1; // 1st block is index block
+                int nBytes = size;
+#if DEBUG_EXTRACT
+    printf( "ProDOS File Size:   $%06X (%d)\n", size, size );
+    printf( "i-node (8-bit)  : @ $%04X\n"     , pEntry->inode );
+//  printf( "Filename Length :   %04X\n", pEntry->len   );
+    printf( "File Blocks     :   $%04X (%d)\n", pEntry->blocks, pEntry->blocks ); // Includes i-nodes
+    printf( "Total Blocks    :   $%04X (%d)\n", nBlock        , nBlock         );
+#endif
                 for( int iBlock = 0; iBlock < nBlock; iBlock++ )
                 {
                     int iDataBlock  = DskGetIndexBlock( addr, iBlock );
                     int iDataOffset = iDataBlock * PRODOS_BLOCK_SIZE;
+                    int nSlack      = min( nBytes, PRODOS_BLOCK_SIZE);
+                        nBytes     -= PRODOS_BLOCK_SIZE;
+#if DEBUG_EXTRACT
+                    int bLastBlock  = (iBlock == (nBlock - 1));
+    printf( "Block: %02X/%02X @ %04X,  LastBlock? %d, Bytes: %6d, Slack: %3d\n", iBlock, nBlock-1, iDataBlock, bLastBlock, nBytes + PRODOS_BLOCK_SIZE, nSlack );
+#endif
+                    fwrite( &gaDsk[ iDataOffset ], 1, nSlack, pFileData );
+                }
 
-                    if( iBlock != nBlock - 1 )
-                        fwrite( &gaDsk[ iDataOffset ], 1, PRODOS_BLOCK_SIZE, pFileData );
-                    else
-                        fwrite( &gaDsk[ iDataOffset ], 1, pEntry->size % PRODOS_BLOCK_SIZE, pFileData );
+                // File size is larger then blocks used on disk?!
+                if( nBytes > 0 )
+                {
+                    // pad with zeroes
+#if DEBUG_EXTRACT
+                    int nSlack      = min( nBytes, PRODOS_BLOCK_SIZE);
+                    printf( "PADDING extra ZERO Bytes: %6d, Slack: %3d\n", nBytes, nSlack );
+#endif
+                    fwrite( &gaTmp, 1, nBytes, pFileData );
                 }
                 break;
             }
