@@ -10,5 +10,11 @@ prodosfs.exe tracks42.po   init -tracks=42   /TRACKS42
 prodosfs.exe tracks43.po   init -tracks=43   /TRACKS43
 prodosfs.exe tracks44.po   init -tracks=44   /TRACKS44
 prodosfs.exe tracks45.po   init -tracks=45   /TRACKS45
+
+@REM 3 1/2"
+prodosfs.exe tracks199.po  init -tracks=199  /TRACKS199
 prodosfs.exe tracks200.po  init -tracks=200  /TRACKS200
+
+@REM Hard Drive
+prodosfs.exe tracks8191.po init -tracks=8191 /TRACKS8191
 prodosfs.exe tracks8192.po init -tracks=8192 /TRACKS8192
