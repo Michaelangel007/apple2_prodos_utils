@@ -135,9 +135,11 @@ Is this still needed?
 "                                         To delete a sub-directory see: rmdir\n"
         , // VOL__INIT
 "                 [-boot=<file>]      Optional: replace boot sector with file\n"
-"                 -size=140           Format 140 KB (5 1/4\")\n"
-"                 -size=800           Format 800 KB (3 1/2\") DEFAULT\n"
-"                 -size=32            Format 32  MB (Hard Disk)\n"
+"                 -size=140           Format 140 KB (5 1/4\", 35 tracks)\n"
+"                 -size=800           Format 800 KB (3 1/2\", 200 tracks) DEFAULT\n"
+"                 -size=32            Format 32  MB (Hard Disk, 8192 tracks)\n"
+"                 -tracks=#           Alternate way to specify the disk size via number of tracks.\n"
+"                                     (The default equivalent is 200 tracks for 3 1/2\")\n"
 "                 <path>              Name of ProDOS volume name. i.e. /WORK\n"
         , // CAT__NAMES
 "                 [<path>]            Path to sub-directory to view\n"
@@ -808,14 +810,33 @@ int main( const int nArg, const char *aArg[] )
                     if( strncmp( pArg+1,"size=", 5 ) == 0 )
                     {
                         int size = atoi( pArg + 6 );
+                        gnDskSize = 0;
 
                         if( size == 140 ) gnDskSize = DSK_SIZE_514;
                         if( size == 800 ) gnDskSize = DSK_SIZE_312;
                         if( size ==  32 ) gnDskSize = DSK_SIZE_32M;
-
+                        if( !gnDskSize )
+                        {
+                            printf( "ERROR: Bad disk size. Must be 140, 800, or 32.\nDefaulting to 800 KB.\n" );
+                            gnDskSize = DSK_SIZE_312;
+                        }
 #if DEBUG_MAIN
     printf( "INIT: size = %s\n", itoa_comma( gnDskSize ) );
 #endif
+                    }
+                    else
+                    if( strncmp( pArg+1, "tracks=", 7 ) == 0 )
+                    {
+                        int tracks = atoi( pArg + 8 );
+                        if ((tracks > 0) && (tracks <= 8192))
+                        {
+                            gnDskSize = 8 * PRODOS_BLOCK_SIZE * tracks; // 8 blocks/track * 512 bytes/block = 4096 bytes/track
+                        }
+                        else
+                        {
+                            printf( "ERROR: Invalid number of tracks. Must be >= 1 and <= 8192.\nDefaulting to 800 KB.\n" );
+                            gnDskSize = DSK_SIZE_312;
+                        }
                     }
                     else
                         return printf( "ERROR: Unknown option: %s\n", pArg );
