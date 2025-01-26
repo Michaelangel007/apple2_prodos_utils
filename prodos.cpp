@@ -21,6 +21,11 @@
     #include "prodos.utils.cpp"
     #include "prodos.tools.cpp"
 
+void version()
+{
+    printf( "ProDOS File System v0.2\n" );
+}
+
 /*
 TODO:
     -meta <filename>   Use these file attributes instead of default <file>._META
@@ -173,6 +178,7 @@ Is this still needed?
 // ========================================================================
 int usage()
 {
+    version();
     printf(
 "Usage: <dsk> <command> [<options>] [<path>]\n"
 "\n"
