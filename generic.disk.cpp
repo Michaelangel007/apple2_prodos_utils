@@ -253,59 +253,63 @@ bool DskLoad( const char *dsk_filename, SectorOrder_e sector_order )
 // ========================================================================
 bool DskSave()
 {
+    bool status = false;
     FILE *pFile = fopen( gpDskName, "w+b" );
 
-    if( !pFile )
+    if( pFile )
+    {
+        fseek( pFile, 0L, SEEK_SET );
+
+        if( giInterleaveLastUsed == INTERLEAVE_PRODOS_ORDER )
+        {
+            size_t wrote = fwrite( gaDsk, 1, gnDskSize, pFile );
+            (void) wrote;
+    #if DEBUG_DSK_SAVE
+            printf( "DskSave() wrote .po: %d\n", wrote );   
+    #endif
+        }
+        else
+        if( giInterleaveLastUsed == INTERLEAVE_DOS33_ORDER )
+        {
+            int    nTracks = DSK_GetNumTracks();
+            size_t offset = 0;
+
+    #if DEBUG_DSK_SAVE
+        printf( "Tracks: %d\n", nTracks );
+    #endif
+
+            for( int iTracks = 0; iTracks < nTracks; iTracks++ )
+            {
+                size_t dst = offset;
+
+                for( int iSector = 0; iSector < 16; iSector++ )
+                {
+                    size_t src;
+                    size_t dst;
+                    Interleave_Reverse( iSector, &src, &dst );
+
+    #if DEBUG_DSK_SAVE
+        if( iTracks == 0 )
+            printf( "%06X -> T0S%X\n", dst, iSector );
+    #endif
+
+                    fseek( pFile, (long)(offset + dst), SEEK_SET );
+                    fwrite( &gaDsk[ offset + src ], 1, DSK_SECTOR_SIZE, pFile );
+                }
+
+                offset += 16 * DSK_SECTOR_SIZE;
+            }
+        }
+
+        fclose( pFile );
+        status = true;
+    }
+    else
     {
         printf( "ERROR: Couldn't write to: %s\n", gpDskName );
     }
 
-    fseek( pFile, 0L, SEEK_SET );
-
-    if( giInterleaveLastUsed == INTERLEAVE_PRODOS_ORDER )
-    {
-        size_t wrote = fwrite( gaDsk, 1, gnDskSize, pFile );
-        (void) wrote;
-#if DEBUG_DSK_SAVE
-        printf( "DskSave() wrote .po: %d\n", wrote );   
-#endif
-    }
-    else
-    if( giInterleaveLastUsed == INTERLEAVE_DOS33_ORDER )
-    {
-        int    nTracks = DSK_GetNumTracks();
-        size_t offset = 0;
-
-#if DEBUG_DSK_SAVE
-    printf( "Tracks: %d\n", nTracks );
-#endif
-
-        for( int iTracks = 0; iTracks < nTracks; iTracks++ )
-        {
-            size_t dst = offset;
-
-            for( int iSector = 0; iSector < 16; iSector++ )
-            {
-                size_t src;
-                size_t dst;
-                Interleave_Reverse( iSector, &src, &dst );
-
-#if DEBUG_DSK_SAVE
-    if( iTracks == 0 )
-        printf( "%06X -> T0S%X\n", dst, iSector );
-#endif
-
-                fseek( pFile, (long)(offset + dst), SEEK_SET );
-                fwrite( &gaDsk[ offset + src ], 1, DSK_SECTOR_SIZE, pFile );
-            }
-
-            offset += 16 * DSK_SECTOR_SIZE;
-        }
-    }
-
-    fclose( pFile );
-
-    return true;
+    return status;
 }
 
 
