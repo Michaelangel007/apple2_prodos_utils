@@ -33,8 +33,7 @@ size_t string_CopyUpper( char *pDst, const char *pSrc, int nLen = 0 )
 // ========================================================================
 const char* file_GetExtension( const char *pFileName )
 {
-    int nLen = strlen( pFileName );
-
+    size_t      nLen = strlen( pFileName );
     const char *pSrc = pFileName + nLen - 1;
     const char *pBeg = pFileName;
 
