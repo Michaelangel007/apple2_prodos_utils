@@ -131,7 +131,7 @@ Is this still needed?
         , // VOL__INIT
 "                 [-boot=<file>]      Optional: replace boot sector with file\n"
 "                 -size=140           Format 140 KB (5 1/4\")\n"
-"                 -size=800           Format 800 KB (3 1/2\")\n"
+"                 -size=800           Format 800 KB (3 1/2\") DEFAULT\n"
 "                 -size=32            Format 32  MB (Hard Disk)\n"
 "                 <path>              Name of virtual volume.\n"
         , // CAT__NAMES
@@ -774,7 +774,7 @@ int main( const int nArg, const char *aArg[] )
 
         case DISK_COMMAND_VOL_INIT:
         {
-            gnDskSize            = DSK_SIZE_312; // TODO: --size=140 --size=800 --size=32
+            gnDskSize = DSK_SIZE_312;
             if( !DskGetInterleave( gpDskName ) )
                 errorBadInterleave();
 
