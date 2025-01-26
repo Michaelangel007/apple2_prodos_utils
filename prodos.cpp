@@ -133,7 +133,7 @@ Is this still needed?
 "                 -size=140           Format 140 KB (5 1/4\")\n"
 "                 -size=800           Format 800 KB (3 1/2\") DEFAULT\n"
 "                 -size=32            Format 32  MB (Hard Disk)\n"
-"                 <path>              Name of virtual volume.\n"
+"                 <path>              Name of ProDOS volume name. i.e. /WORK\n"
         , // CAT__NAMES
 "                 [<path>]            Path to sub-directory to view\n"
 "                                     Defaults to: /\n"
