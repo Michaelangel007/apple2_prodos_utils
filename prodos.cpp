@@ -302,7 +302,7 @@ bool getCopyConfig( ProDOS_FileHeader_t *entry, const char *arg )
 
         //-date=MM/DD/YY
         //-date=DD-MON-YR
-        if( (nLenSuffix != 8) || nLenSuffix != 9 )
+        if( (nLenSuffix < 8) || nLenSuffix > 9 )
         {
             printf( "ERROR: Invalid date. Format is MM/DD/YY or DD-MON-YR\n" );
             return false;
