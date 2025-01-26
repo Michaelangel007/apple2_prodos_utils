@@ -427,25 +427,23 @@ printf( "ERROR: Create Time not yet implemented\n" );
 bool doCopy( ProDOS_FileHeader_t *entry, const char *filename )
 {
   const char  *pSrcFileName = filename;
-        size_t nSrcLen      = strlen( pSrcFileName );
-
+        int    nSrcLen      = (int) strlen( pSrcFileName );
         char  *pExt         = const_cast<char*>( file_GetExtension( pSrcFileName ) );
         char   sExt[ 5 ]    = ".???";
-        size_t nExtLen      = 0;
+        int    nExtLen      = 0;
         bool   bCopiedName  = false;
-
 
     // Chop extension down to leading '.' plus max 3 chars
     if( pExt )
     {
-        size_t nLen = string_CopyUpper( sExt, pExt, 4 ); // 3 char extension
+        int nLen = string_CopyUpper( sExt, pExt, 4 ); // 3 char extension
 
         pExt    = sExt;
         nExtLen = nLen;
     }
 
     const char *pBaseName = filename + nSrcLen;
-    size_t      nBaseLen  = 0;
+    int         nBaseLen  = 0;
 
     // Chop off preceeding directory if there is one
     if( pBaseName )

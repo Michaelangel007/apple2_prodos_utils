@@ -3,10 +3,10 @@
 // @param nLen - copy up to N chars. If zero will calculate source string length
 // @return Length of string not including NULL terminator
 // ========================================================================
-size_t string_CopyUpper( char *pDst, const char *pSrc, int nLen = 0 )
+int string_CopyUpper( char *pDst, const char *pSrc, int nLen = 0 )
 {
     if( !nLen )
-        nLen = strlen( pSrc );
+        nLen = (int) strlen( pSrc );
 
     char *pBeg = pDst;
 
@@ -20,12 +20,12 @@ size_t string_CopyUpper( char *pDst, const char *pSrc, int nLen = 0 )
         if((c >= 'a') && (c <= 'z' ))
             c -= ('a' - 'A');
 
-        *pDst++ = c;               
+        *pDst++ = c;
     }
 
     *pDst = 0;
 
-    return (pDst - pBeg); 
+    return (int)(pDst - pBeg);
 }
 
 

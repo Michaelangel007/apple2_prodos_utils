@@ -115,18 +115,19 @@
 
 // --- Size --- 
 
-    size_t File_Size( FILE *pFile )
+    int File_Size( FILE *pFile )
     {
         fseek( pFile, 0L, SEEK_END );
         size_t size = ftell( pFile );
         fseek( pFile, 0L, SEEK_SET );
 
-        return size;
+        return (int)size;
     }
 
     int DSK_GetNumTracks()
     {
-        return gnDskSize / (16 * DSK_SECTOR_SIZE);
+        size_t tracks = gnDskSize / (16 * DSK_SECTOR_SIZE);
+        return (int)tracks;
     }
 
 
@@ -209,7 +210,7 @@ bool DskLoad( const char *dsk_filename, SectorOrder_e sector_order )
             else
             if( giInterleaveLastUsed == INTERLEAVE_DOS33_ORDER )
             {
-                int    nTracks = DSK_GetNumTracks();
+                size_t nTracks = DSK_GetNumTracks();
                 size_t offset = 0;
 
 #if DEBUG_DSK_LOAD
@@ -228,7 +229,7 @@ bool DskLoad( const char *dsk_filename, SectorOrder_e sector_order )
     if( iTracks == 0 )
         printf( "T0S%X -> %06X\n", iSector, src );
 #endif
-                        fseek( pFile, offset + src, SEEK_SET );
+                        fseek( pFile, (long)(offset + src), SEEK_SET );
                         fread( &gaDsk[ offset + dst ], 1, DSK_SECTOR_SIZE, pFile );
                     }
 
@@ -263,7 +264,7 @@ bool DskSave()
 
     if( giInterleaveLastUsed == INTERLEAVE_PRODOS_ORDER )
     {
-        int wrote = fwrite( gaDsk, 1, gnDskSize, pFile );
+        size_t wrote = fwrite( gaDsk, 1, gnDskSize, pFile );
         (void) wrote;
 #if DEBUG_DSK_SAVE
         printf( "DskSave() wrote .po: %d\n", wrote );   
@@ -294,7 +295,7 @@ bool DskSave()
         printf( "%06X -> T0S%X\n", dst, iSector );
 #endif
 
-                fseek( pFile, offset + dst, SEEK_SET );
+                fseek( pFile, (long)(offset + dst), SEEK_SET );
                 fwrite( &gaDsk[ offset + src ], 1, DSK_SECTOR_SIZE, pFile );
             }
 

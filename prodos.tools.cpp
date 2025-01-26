@@ -490,7 +490,7 @@ int prodos_FindFile( ProDOS_VolumeHeader_t *volume, const char *path, int base =
     if( !path )
         return base;
 
-    size_t nPathLen = strlen( path );
+    int nPathLen = (int) strlen( path );
     if( nPathLen == 0 )
         return base;
 
@@ -505,7 +505,7 @@ int prodos_FindFile( ProDOS_VolumeHeader_t *volume, const char *path, int base =
     // Get path head
     int  iDirName = nPathLen;
     char sDirName[16];
-    size_t i;
+    int  i;
 
     // Split path
     for( i = 0; i < nPathLen; i++ )
@@ -680,7 +680,7 @@ void prodos_MetaGetFileName( ProDOS_FileHeader_t *pEntry, char sAttrib[ PRODOS_M
 
     // Attribute meta-data
     const char   sExt[] = "._META";
-    const size_t nExt   = strlen( sExt );
+    const int    nExt   = (int) strlen( sExt );
     int          nAttrib = string_CopyUpper( sAttrib +       0, pEntry->name, pEntry->len );
     /* */                  string_CopyUpper( sAttrib + nAttrib, sExt        , nExt        );
 }
@@ -1198,15 +1198,15 @@ bool ProDOS_FileAdd( const char *to_path, const char *from_filename, ProDOS_File
 
     // Block Management
 
-    size_t nSrcSize     = File_Size( pSrcFile );
-    int    nBlocksData  = (nSrcSize + PRODOS_BLOCK_SIZE - 1) / PRODOS_BLOCK_SIZE;
-    int    nBlocksIndex = 0; // Num Blocks needed for meta (Index)
-    int    nBlocksTotal = 0;
-    int    nBlocksFree  = 0;
+    int nSrcSize     = File_Size( pSrcFile );
+    int nBlocksData  = (nSrcSize + PRODOS_BLOCK_SIZE - 1) / PRODOS_BLOCK_SIZE;
+    int nBlocksIndex = 0; // Num Blocks needed for meta (Index)
+    int nBlocksTotal = 0;
+    int nBlocksFree  = 0;
 
-    int    iNode        = 0; // Master Index, Single Index, or 0 if none
-    int    iIndexBase   = 0; // Single Index
-    int    iMasterIndex = 0; // master block points to N IndexBlocks
+    int iNode        = 0; // Master Index, Single Index, or 0 if none
+    int iIndexBase   = 0; // Single Index
+    int iMasterIndex = 0; // master block points to N IndexBlocks
 
 #if DEBUG_ATTRIB
     printf( "Source File Size: %06X (%d)\n", nSrcSize, nSrcSize );
