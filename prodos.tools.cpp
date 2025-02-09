@@ -20,59 +20,276 @@
 #define min(a,b) ((a < b) ? a : b)
 #define max(a,b) ((a < b) ? b : a)
 
-// --- ProDOS crap ---
+// --- Prototypes ---
 
-    struct SubDirInfo_t
-    {
-        uint8_t res75  ; // $75 - magic number
-        uint8_t pad7[7];
-    };
+    int  prodos_FindFile( ProDOS_VolumeHeader_t *volume, const char *path, int base = PRODOS_ROOT_OFFSET );
+    void prodos_GetFileHeader( int offset, ProDOS_FileHeader_t *file_ );
 
-    struct VolumeExtra_t
-    {
-        uint16_t bitmap_block;
-        uint16_t total_blocks;
-    };
 
-    struct SubDirExtra_t
+// Globals ________________________________________________________________
+
+    int                 gnLastDirBlock = 0;
+    char                gpLastDirName[ 16 ];
+    int                 gnLastDirMaxFiles = 0;
+    ProDOS_FileHeader_t gtLastDirFile;
+
+    ProDOS_VolumeHeader_t gVolume;
+    ProDOS_FileHeader_t   gEntry; // Default fields for cp
+
+// --- ProDOS Block Functions ---
+
+    // @return total blocks allocated for directory
+    // ------------------------------------------------------------------------
+    int prodos_BlockGetDirectoryCount( int offset )
     {
-        uint16_t parent_block;
-        uint8_t  parent_entry_num;
-        uint8_t  parent_entry_len;
-    };
+        int blocks     = 0;
+        int next_block = 0;
+
+        do
+        {
+            blocks++;
+            next_block = DskGet16( offset + 2 );
+            offset     = next_block * PRODOS_BLOCK_SIZE;
+        } while( next_block );
+
+        return blocks;
+    }
+
+    // @returns 0 if no free block
+    // ------------------------------------------------------------------------
+    int prodos_BlockGetFirstFree( ProDOS_VolumeHeader_t *volume )
+    {
+        if( !volume )
+        {
+            printf( "ERROR: Volume never read\n" );
+            return 0;
+        }
+
+        int bitmap = volume->meta.bitmap_block;
+        int offset = bitmap * PRODOS_BLOCK_SIZE;
+        int size   = (gnDskSize + 7) / 8; // TODO: Cleanup
+        int block  = 0;
+
+    #if DEBUG_FREE
+        printf( "DskSize: %06x\n", gnDskSize );
+        printf( "Bitmap @ %04X\n", bitmap    );
+        printf( "Offset : %06X\n", offset    );
+        printf( "Bytes  : %06X\n", size      );
+    #endif
+
+        for( int byte = 0; byte < size; byte++ )
+        {
+            int mask = 0x80;
+            do
+            {
+                if( gaDsk[ offset + byte ] & mask )
+                    return block;
+
+                mask >>= 1;
+                block++;
+            }
+            while( mask );
+        }
+
+    #if DEBUG_FREE
+        printf( "ZERO free block\n" );
+    #endif
+
+        return 0;
+    }
+
+    // @returns Total Free Blocks
+    // ------------------------------------------------------------------------
+    int prodos_BlockGetFreeTotal( ProDOS_VolumeHeader_t *volume )
+    {
+        int blocks   = volume->meta.total_blocks;
+        int ALIGN    = 8 * PRODOS_BLOCK_SIZE;
+        int pages    = (blocks + ALIGN) / ALIGN;
+        int inode    = volume->meta.bitmap_block;
+        int base     = inode * PRODOS_BLOCK_SIZE;
+
+        int free = 0;
+        int byte;
+        int bits;
+
+    #if DEBUG_BITMAP
+        printf( "DEBUG: BITMAP: Blocks: %d\n"   , blocks );
+        printf( "DEBUG: BITMAP: iNode : @%04X\n", inode  );
+        printf( "DEBUG: BITMAP: Pages : %d\n"   , pages  );
+        printf( "DEBUG: BITMAP: offset: $%06X\n", base   );
+    #endif
+
+        while( pages --> 0 )
+        {
+            for( byte = 0; byte < PRODOS_BLOCK_SIZE; byte++ )
+            {
+                uint8_t bitmap = gaDsk[ base + byte ];
+
+    #if DEBUG_META
+    if( bitmap )
+        printf( "free @ base: %8X, offset: %04X\n", base, byte );
+    #endif
+
+                for( bits = 0; bits < 8; bits++, bitmap >>= 1 )
+                    if( bitmap & 1 )
+                        free++;
+            }
+
+            base += PRODOS_BLOCK_SIZE;
+        }
+
+        return free;
+    }
+
+    // ------------------------------------------------------------------------
+    int prodos_BlockGetPath( const char *path )
+    {
+        int offset = PRODOS_ROOT_OFFSET; // Block 2 * 0x200 Bytes/Block = 0x400 abs offset
+
+        // Scan Directory ...
+        strcpy( gpLastDirName, gVolume.name );
+
+        gnLastDirBlock    = offset;
+        int nDirBlocks    = prodos_BlockGetDirectoryCount( offset );
+        gnLastDirMaxFiles = nDirBlocks * gVolume.entry_num;
+
+        memset( &gtLastDirFile, 0, sizeof( gtLastDirFile ) );
+
+    #if DEBUG_PATH
+        printf( "Directory Entry Bytes  : $%04X\n", gVolume.entry_len );
+        printf( "Directory Entries/Block: %d\n"   , gVolume.entry_num );
+        printf( "VOLUME Directory Blocks: %d\n"   , nDirBlocks );
+        printf( "...Alt. max dir files  : %d\n"   ,(nDirBlocks * PRODOS_BLOCK_SIZE) / volume.entry_len ); // 2nd way to verify
+    #endif
+
+        if( path == NULL )
+            return offset;
+
+        if( strcmp( path, "/" ) == 0 )
+            return offset;
+
+        return prodos_FindFile( &gVolume, path, offset );
+    }
+
+    // @return number of total disk blocks
+    // ------------------------------------------------------------------------
+    int prodos_BlockInitFree( ProDOS_VolumeHeader_t *volume )
+    {
+        int bitmap = volume->meta.bitmap_block;
+        int offset = bitmap * PRODOS_BLOCK_SIZE;
+        int blocks = (gnDskSize + PRODOS_BLOCK_SIZE - 1) / PRODOS_BLOCK_SIZE; // TODO: Cleanup
+        int size   = (blocks + 7) / 8;
+
+    #if DEBUG_INIT
+        printf( "offset: %06X\n", offset );
+        printf( "Total  Blocks: %d\n", blocks );
+        printf( "Bitmap Blocks: %d\n", (size + PRODOS_BLOCK_SIZE - 1) / PRODOS_BLOCK_SIZE );
+    #endif
+
+        memset( &gaDsk[ offset ], 0xFF, size );
+
+    #if DEBUG_INIT
+        printf( "Bitmap after init\n" );
+        DskDump( offset, offset + 64 );
+        printf( "\n" );
+    #endif
+
+        volume->meta.total_blocks = blocks;
+        return (size + PRODOS_BLOCK_SIZE - 1) / PRODOS_BLOCK_SIZE;
+    }
+
+
+    // ------------------------------------------------------------------------
+    bool prodos_BlockSetFree( ProDOS_VolumeHeader_t *volume, int block )
+    {
+        if( !volume )
+        {
+            printf( "ERROR: Volume never read\n" );
+            return false;
+        }
+
+        int bitmap = volume->meta.bitmap_block;
+        int offset = bitmap * PRODOS_BLOCK_SIZE;
+
+        int byte = block / 8;
+        int bits = block % 8;
+        int mask = 0x80 >> bits;
+
+        gaDsk[ offset + byte ] |= mask;
+
+        return true;
+    }
+
+    // ------------------------------------------------------------------------
+    bool prodos_BlockSetUsed( ProDOS_VolumeHeader_t *volume, int block )
+    {
+        if( !volume )
+        {
+            printf( "ERROR: Volume never read\n" );
+            return false;
+        }
+
+        int bitmap = volume->meta.bitmap_block;
+        int offset = bitmap * PRODOS_BLOCK_SIZE;
+
+        int byte = block / 8;
+        int bits = block % 8;
+        int mask = 0x80 >> bits;
+
+        gaDsk[ offset + byte ] |= mask;
+        gaDsk[ offset + byte ] ^= mask;
+
+        return true;
+    }
+
+// --- ProDOS Directory Functions ---
+
+    // @return 0 if couldn't find a free directory entry, else offset
+    // ------------------------------------------------------------------------
+    int prodos_DirGetFirstFree( ProDOS_VolumeHeader_t *volume, int base )
+    {
+        int next_block;
+        int prev_block;
+
+        int offset = base + 4;
+
+        // Try to find the file in this directory
+        do
+        {
+            prev_block = DskGet16( base + 0 );
+            next_block = DskGet16( base + 2 );
+
+            for( int iFile = 0; iFile < volume->entry_num; iFile++ )
+            {
+                ProDOS_FileHeader_t file;
+                prodos_GetFileHeader( offset, &file );
+
+    #if DEBUG_DIR
+        printf( "DEBUG: DIR: " );
+        printf( "#%2d %s\n", iFile, file.name );
+        printf( "... Type: $%1X, %s\n", file.kind, prodos_KindToString( file.kind ) );
+    #endif
+
+                if( file.kind == ProDOS_KIND_DEL)
+                    return offset;
+
+                if( file.len == 0 )
+                    return offset;
+
+                offset += volume->entry_len;
+            }
+
+            base   = next_block * PRODOS_BLOCK_SIZE;
+            offset = base + 4;
+
+        } while( next_block );
+
+        return 0;
+    }
+
+// --- ProDOS Volume Functions ---
 
     // ============================================================
-
-    // Due to packing/aignment this may NOT be size identical
-    // But it is in the correct order
-    // See: ProDOS_GetVolumeHeader;
-    struct ProDOS_VolumeHeader_t
-    {                           ; //Rel Size Abs
-        uint8_t  kind           ; // +0    1 $04  \ Hi nibble  Storage Type
-        uint8_t  len            ; // +0           / Lo nibble
-        char     name[ 16 ]     ; // +1   15 $05  15 on disk but we NULL terminate for convenience
-// --- diff from file ---
-        union
-        {
-            uint8_t  pad8[  8 ] ; //+16    8 $14 only in root
-            SubDirInfo_t  info  ; //             only in sub-dir
-        }                       ;
-// --- same as file ---
-        uint16_t date           ; //+24    2 $1C
-        uint16_t time           ; //+26    2 $1E
-        uint8_t  cur_ver        ; //+28    1 $20
-        uint8_t  min_ver        ; //+29    1 $21
-        uint8_t  access         ; //+30    1 $22
-        uint8_t  entry_len      ; //+31    1 $23 Size of each directory entry in bytes
-        uint8_t  entry_num      ; //+32    1 $24 Number of directory entries per block
-        uint16_t file_count     ; //+33    2 $25 Active entries including directories, excludes volume header
-        union                     //          --
-        {                         //          --
-            VolumeExtra_t meta  ; //+34    2 $27
-            SubDirExtra_t subdir; //+36    2 $29
-        }                       ; //============
-    }                           ; // 38      $2B
-
     void prodos_GetVolumeHeader( ProDOS_VolumeHeader_t *meta_, int block )
     {
         int base = block*PRODOS_BLOCK_SIZE + 4; // skip prev/next dir block double linked list
@@ -162,31 +379,7 @@ if( block == PRODOS_ROOT_BLOCK )
         DskPut16( base + 37 ,   volume->meta.total_blocks );
     }
 
-    // ============================================================
-    struct ProDOS_FileHeader_t
-    {                           ; //Rel Size Hex
-        uint8_t  kind           ; // +0    1 $00  \ Hi nibble Storage Type
-        uint8_t  len            ; // +0           / Lo nibble Filename Length
-        char     name[ 16 ]     ; // +1   15 $05  15 on disk but we NULL terminate for convenience
-// --- diff from volume ---
-        uint8_t  type           ; //+16    1 $10              User Type
-        uint16_t inode          ; //+17    2 $11
-        uint16_t blocks         ; //+19    2 $13
-        uint32_t size           ; //+21    3 $15 EOF address - on disk is 3 bytes, but 32-bit for convenience
-// --- same as volume ---
-        uint16_t date           ; //+24    2 $18
-        uint16_t time           ; //+26    2 $1A
-        uint8_t  cur_ver        ; //+28    1 $1C
-        uint8_t  min_ver        ; //+29    1 $1D // 0 = ProDOS 1.0
-        uint8_t  access         ; //+30    1 $1E
-// --- diff from subdir
-        uint16_t aux            ; //+31    2 $1F Load Address for Binary
-// --- diff from volume ---
-        uint16_t mod_date       ; //+33    2 $21
-        uint16_t mod_time       ; //+35    2 $23
-        uint16_t dir_block      ; //+37    2 $25 pointer to directory block
-                                ; //============
-    };                          ; // 39      $27
+// --- ProDOS File Functions ---
 
 #if DEBUG_FILE
     // ------------------------------------------------------------
@@ -242,7 +435,6 @@ if( block == PRODOS_ROOT_BLOCK )
         prodos_DumpFileHeader( info );
 #endif
 
-
         if(  file_ )
             *file_ = info;
     }
@@ -291,475 +483,214 @@ if( block == PRODOS_ROOT_BLOCK )
             ;
     }
 
-// Globals ________________________________________________________________
 
-    int                 gnLastDirBlock = 0;
-    char                gpLastDirName[ 16 ];
-    int                 gnLastDirMaxFiles = 0;
-    ProDOS_FileHeader_t gtLastDirFile;
-
-    ProDOS_VolumeHeader_t gVolume;
-    ProDOS_FileHeader_t   gEntry; // Default fields for cp
-
-// @return total blocks allocated for directory
-// ------------------------------------------------------------------------
-int prodos_BlockGetDirectoryCount( int offset )
-{
-    int blocks     = 0;
-    int next_block = 0;
-
-    do
+    // @return 0 if couldn't find file, else offset
+    // Sets:
+    //    gtLastDirFile
+    //    gnLastDirBlock
+    //    gnLastDirMaxFiles
+    // ------------------------------------------------------------------------
+    int prodos_FindFile( ProDOS_VolumeHeader_t *volume, const char *path, int base )
     {
-        blocks++;
-        next_block = DskGet16( offset + 2 );
-        offset     = next_block * PRODOS_BLOCK_SIZE;
-    } while( next_block );
+        if( !path )
+            return base;
 
-    return blocks;
-}
+        int nPathLen = (int) strlen( path );
+        if( nPathLen == 0 )
+            return base;
 
+    #if DEBUG_FIND_FILE
+        printf( "DEBUG: PATH: %s\n", path );
+        printf( "DEBUG: .len: %d\n", nPathLen );
+    #endif
 
-// @returns 0 if no free block
-// ------------------------------------------------------------------------
-int prodos_BlockGetFirstFree( ProDOS_VolumeHeader_t *volume )
-{
-    if( !volume )
-    {
-        printf( "ERROR: Volume never read\n" );
+        if( path[0] == '/' )
+            path++;
+
+        // Get path head
+        int  iDirName = nPathLen;
+        char sDirName[16];
+        int  i;
+
+        // Split path
+        for( i = 0; i < nPathLen; i++ )
+            if( path[i] == '/' )
+            {
+                iDirName = i;
+                break;
+            }
+
+        memcpy( sDirName, path, iDirName );
+        sDirName[ iDirName ] = 0;
+
+        strcpy( gpLastDirName, sDirName );
+
+    #if DEBUG_FIND_FILE
+        printf( "DEBUG: FIND: [%d]\n", iDirName );
+        printf( "DEBUG: SUBD: %s\n"  , sDirName );
+        printf( "DEBUG: base: %04X\n", base );
+    #endif
+
+        int next_block;
+        int prev_block;
+
+        int offset  = base + 4; // skip prev,next block pointers
+
+        // Try to find the file in this directory
+        do
+        {
+            prev_block = DskGet16( base + 0 );
+            next_block = DskGet16( base + 2 );
+
+            for( int iFile = 0; iFile < volume->entry_num; iFile++ )
+            {
+                ProDOS_FileHeader_t file;
+                prodos_GetFileHeader( offset, &file );
+
+    #if DEBUG_FIND_FILE
+        printf( "... %s\n", file.name );
+        printf( "... Type: $%1X, %s\n", file.kind, prodos_KindToString( file.kind ) );
+    #endif
+
+                if((file.len     == 0)
+                || (file.name[0] == 0)
+                || (file.kind    == ProDOS_KIND_DEL)
+                || (file.kind    == ProDOS_KIND_ROOT)
+                )
+                    goto next_file;
+
+    /*
+                if( file.kind != ProDOS_KIND_DIR )
+                    goto next_file;
+    */
+
+                if( strcmp( file.name, sDirName ) == 0 )
+                {
+                    const char *next = path + iDirName;
+                    int         addr = file.inode * PRODOS_BLOCK_SIZE;
+
+                    gnLastDirBlock    = file.inode;
+                    gnLastDirMaxFiles = file.size / volume->entry_num;
+                    gtLastDirFile     = file;
+
+    #if DEBUG_FIND_FILE
+        prodos_DumpFileHeader( gtLastDirFile );
+        printf( "***\n" );
+        printf( "  DIR  -> %04X\n", addr );
+        printf( "  path -> %s\n"  , next );
+    #endif
+
+                    return prodos_FindFile( volume, next, addr );
+                }
+
+    next_file:
+                offset += volume->entry_len;
+                ;
+            }
+
+            base   = next_block * PRODOS_BLOCK_SIZE;
+            offset = base + 4;
+
+        } while( next_block );
+
+    #if DEBUG_FIND_FILE
+        printf( "*** File Not Found\n" );
+    #endif
+
         return 0;
     }
 
-    int bitmap = volume->meta.bitmap_block;
-    int offset = bitmap * PRODOS_BLOCK_SIZE;
-    int size   = (gnDskSize + 7) / 8;
-    int block  = 0;
+// --- Meta ---
 
-#if DEBUG_FREE
-    printf( "DskSize: %06x\n", gnDskSize );
-    printf( "Bitmap @ %04X\n", bitmap    );
-    printf( "Offset : %06X\n", offset    );
-    printf( "Bytes  : %06X\n", size      );
-#endif
-
-    for( int byte = 0; byte < size; byte++ )
+    // ------------------------------------------------------------------------
+    void prodos_MetaGetFileName( ProDOS_FileHeader_t *pEntry, char sAttrib[ PRODOS_MAX_PATH ] )
     {
-        int mask = 0x80;
-        do
+        if( !pEntry )
+            return;
+
+        // Attribute meta-data
+        const char   sExt[] = "._META";
+        const int    nExt   = (int) strlen( sExt );
+        int          nAttrib = string_CopyUpper( sAttrib +       0, pEntry->name, pEntry->len );
+        /* */                  string_CopyUpper( sAttrib + nAttrib, sExt        , nExt        );
+    }
+
+    // ------------------------------------------------------------------------
+    bool prodos_MetaLoad(ProDOS_FileHeader_t* pEntry)
+    {
+        char sAttrib[ PRODOS_MAX_PATH ];
+        prodos_MetaGetFileName( pEntry, sAttrib );
+
+        printf( "Loading meta... %s\n", sAttrib );
+        FILE *pFileMeta = fopen( sAttrib, "r" );
+
+        if( !pFileMeta )
         {
-            if( gaDsk[ offset + byte ] & mask )
-                return block;
-
-            mask >>= 1;
-            block++;
-        }
-        while( mask );
-    }
-
-#if DEBUG_FREE
-    printf( "ZERO free block\n" );
-#endif
-
-    return 0;
-}
-
-
-// @return number of total disk blocks
-// ------------------------------------------------------------------------
-int prodos_BlockInitFree( ProDOS_VolumeHeader_t *volume )
-{
-    int bitmap = volume->meta.bitmap_block;
-    int offset = bitmap * PRODOS_BLOCK_SIZE;
-    int blocks = (gnDskSize + PRODOS_BLOCK_SIZE - 1) / PRODOS_BLOCK_SIZE;
-    int size   = (blocks + 7) / 8;
-
-#if DEBUG_INIT
-    printf( "offset: %06X\n", offset );
-    printf( "Total  Blocks: %d\n", blocks );
-    printf( "Bitmap Blocks: %d\n", (size + PRODOS_BLOCK_SIZE - 1) / PRODOS_BLOCK_SIZE );
-#endif
-
-    memset( &gaDsk[ offset ], 0xFF, size );
-
-#if DEBUG_INIT
-    printf( "Bitmap after init\n" );
-    DskDump( offset, offset + 64 );
-    printf( "\n" );
-#endif
-
-    volume->meta.total_blocks = blocks;
-    return (size + PRODOS_BLOCK_SIZE - 1) / PRODOS_BLOCK_SIZE;
-}
-
-
-// ------------------------------------------------------------------------
-bool prodos_BlockSetFree( ProDOS_VolumeHeader_t *volume, int block )
-{
-    if( !volume )
-    {
-        printf( "ERROR: Volume never read\n" );
-        return false;
-    }
-
-    int bitmap = volume->meta.bitmap_block;
-    int offset = bitmap * PRODOS_BLOCK_SIZE;
-
-    int byte = block / 8;
-    int bits = block % 8;
-    int mask = 0x80 >> bits;
-
-    gaDsk[ offset + byte ] |= mask;
-
-    return true;
-}
-
-// ------------------------------------------------------------------------
-bool prodos_BlockSetUsed( ProDOS_VolumeHeader_t *volume, int block )
-{
-    if( !volume )
-    {
-        printf( "ERROR: Volume never read\n" );
-        return false;
-    }
-
-    int bitmap = volume->meta.bitmap_block;
-    int offset = bitmap * PRODOS_BLOCK_SIZE;
-
-    int byte = block / 8;
-    int bits = block % 8;
-    int mask = 0x80 >> bits;
-
-    gaDsk[ offset + byte ] |= mask;
-    gaDsk[ offset + byte ] ^= mask;
-
-    return true;
-}
-
-
-// @return 0 if couldn't find a free directory entry, else offset
-// ------------------------------------------------------------------------
-int prodos_DirGetFirstFree( ProDOS_VolumeHeader_t *volume, int base )
-{
-    int next_block;
-    int prev_block;
-
-    int offset = base + 4;
-
-    // Try to find the file in this directory
-    do
-    {
-        prev_block = DskGet16( base + 0 );
-        next_block = DskGet16( base + 2 );
-
-        for( int iFile = 0; iFile < volume->entry_num; iFile++ )
-        {
-            ProDOS_FileHeader_t file;
-            prodos_GetFileHeader( offset, &file );
-
-#if DEBUG_DIR
-    printf( "DEBUG: DIR: " );
-    printf( "#%2d %s\n", iFile, file.name );
-    printf( "... Type: $%1X, %s\n", file.kind, prodos_KindToString( file.kind ) );
-#endif
-
-            if( file.kind == ProDOS_KIND_DEL)
-                return offset;
-
-            if( file.len == 0 )
-                return offset;
-
-            offset += volume->entry_len;
+            printf( "INFO.: Couldn't open attribute file for reads: %s\n", sAttrib );
+            return false;
         }
 
-        base   = next_block * PRODOS_BLOCK_SIZE;
-        offset = base + 4;
+        int value;
 
-    } while( next_block );
+        fscanf( pFileMeta, "access  = $%X\n", &value ); pEntry->access   = value; // 02
+        fscanf( pFileMeta, "aux     = $%X\n", &value ); pEntry->aux      = value; // 04
+        fscanf( pFileMeta, "type    = $%X\n", &value ); pEntry->type     = value; // 02
+        fscanf( pFileMeta, "kind    = $%X\n", &value ); pEntry->kind     = value; // 02
+        fscanf( pFileMeta, "date    = $%X\n", &value ); pEntry->date     = value; // 04
+        fscanf( pFileMeta, "time    = $%X\n", &value ); pEntry->time     = value; // 04
+        fscanf( pFileMeta, "version = $%X\n", &value ); pEntry->cur_ver  = value; // 02
+        fscanf( pFileMeta, "minver  = $%X\n", &value ); pEntry->min_ver  = value; // 02
+        fscanf( pFileMeta, "moddate = $%X\n", &value ); pEntry->mod_date = value; // 04
+        fscanf( pFileMeta, "modtime = $%X\n", &value ); pEntry->mod_time = value; // 04
 
-    return 0;
-}
+    #if DEBUG_ATTRIB
+        printf( "access  = $%02X\n", pEntry->access   );
+        printf( "aux     = $%04X\n", pEntry->aux      );
+        printf( "type    = $%02X\n", pEntry->type     );
+        printf( "kind    = $%02X\n", pEntry->kind     );
+        printf( "date    = $%04X\n", pEntry->date     );
+        printf( "time    = $%04X\n", pEntry->time     );
+        printf( "version = $%02X\n", pEntry->cur_ver  );
+        printf( "minver  = $%02X\n", pEntry->min_ver  );
+        printf( "moddate = $%04X\n", pEntry->mod_date );
+        printf( "modtime = $%04X\n", pEntry->mod_time );
+    #endif
 
-
-// @return 0 if couldn't find file, else offset
-// Sets:
-//    gtLastDirFile
-//    gnLastDirBlock
-//    gnLastDirMaxFiles
-// ------------------------------------------------------------------------
-int prodos_FindFile( ProDOS_VolumeHeader_t *volume, const char *path, int base = PRODOS_ROOT_OFFSET )
-{
-    if( !path )
-        return base;
-
-    int nPathLen = (int) strlen( path );
-    if( nPathLen == 0 )
-        return base;
-
-#if DEBUG_FIND_FILE
-    printf( "DEBUG: PATH: %s\n", path );
-    printf( "DEBUG: .len: %d\n", nPathLen );
-#endif
-
-    if( path[0] == '/' )
-        path++;
-
-    // Get path head
-    int  iDirName = nPathLen;
-    char sDirName[16];
-    int  i;
-
-    // Split path
-    for( i = 0; i < nPathLen; i++ )
-        if( path[i] == '/' )
-        {
-            iDirName = i;
-            break;
-        }
-
-    memcpy( sDirName, path, iDirName );
-    sDirName[ iDirName ] = 0;
-
-    strcpy( gpLastDirName, sDirName );
-
-#if DEBUG_FIND_FILE
-    printf( "DEBUG: FIND: [%d]\n", iDirName );
-    printf( "DEBUG: SUBD: %s\n"  , sDirName );
-    printf( "DEBUG: base: %04X\n", base );
-#endif
-
-    int next_block;
-    int prev_block;
-
-    int offset  = base + 4; // skip prev,next block pointers
-
-    // Try to find the file in this directory
-    do
-    {
-        prev_block = DskGet16( base + 0 );
-        next_block = DskGet16( base + 2 );
-
-        for( int iFile = 0; iFile < volume->entry_num; iFile++ )
-        {
-            ProDOS_FileHeader_t file;
-            prodos_GetFileHeader( offset, &file );
-
-#if DEBUG_FIND_FILE
-    printf( "... %s\n", file.name );
-    printf( "... Type: $%1X, %s\n", file.kind, prodos_KindToString( file.kind ) );
-#endif
-
-            if((file.len     == 0)
-            || (file.name[0] == 0)
-            || (file.kind    == ProDOS_KIND_DEL)
-            || (file.kind    == ProDOS_KIND_ROOT)
-            )
-                goto next_file;
-
-/*
-            if( file.kind != ProDOS_KIND_DIR )
-                goto next_file;
-*/
-
-            if( strcmp( file.name, sDirName ) == 0 )
-            {
-                const char *next = path + iDirName;
-                int         addr = file.inode * PRODOS_BLOCK_SIZE;
-
-                gnLastDirBlock    = file.inode;
-                gnLastDirMaxFiles = file.size / volume->entry_num;
-                gtLastDirFile     = file;
-
-#if DEBUG_FIND_FILE
-    prodos_DumpFileHeader( gtLastDirFile );
-    printf( "***\n" );
-    printf( "  DIR  -> %04X\n", addr );
-    printf( "  path -> %s\n"  , next );
-#endif
-
-                return prodos_FindFile( volume, next, addr );
-            }
-
-next_file:
-            offset += volume->entry_len;
-            ;
-        }
-
-        base   = next_block * PRODOS_BLOCK_SIZE;
-        offset = base + 4;
-
-    } while( next_block );
-
-#if DEBUG_FIND_FILE
-    printf( "*** File Not Found\n" );
-#endif
-
-    return 0;
-}
-
-
-// ------------------------------------------------------------------------
-int prodos_BlockGetPath( const char *path )
-{
-    int offset = PRODOS_ROOT_OFFSET; // Block 2 * 0x200 Bytes/Block = 0x400 abs offset
-
-    // Scan Directory ...
-    strcpy( gpLastDirName, gVolume.name );
-
-    gnLastDirBlock    = offset;
-    int nDirBlocks    = prodos_BlockGetDirectoryCount( offset );
-    gnLastDirMaxFiles = nDirBlocks * gVolume.entry_num;
-
-    memset( &gtLastDirFile, 0, sizeof( gtLastDirFile ) );
-
-
-#if DEBUG_PATH
-    printf( "Directory Entry Bytes  : $%04X\n", gVolume.entry_len );
-    printf( "Directory Entries/Block: %d\n"   , gVolume.entry_num );
-    printf( "VOLUME Directory Blocks: %d\n"   , nDirBlocks );
-    printf( "...Alt. max dir files  : %d\n"   ,(nDirBlocks * PRODOS_BLOCK_SIZE) / volume.entry_len ); // 2nd way to verify
-#endif
-
-    if( path == NULL )
-        return offset;
-
-    if( strcmp( path, "/" ) == 0 )
-        return offset;
-
-    return prodos_FindFile( &gVolume, path, offset );
-}
-
-
-// @returns Total Free Blocks
-// ------------------------------------------------------------------------
-int prodos_BlockGetFreeTotal( ProDOS_VolumeHeader_t *volume )
-{
-    int blocks   = volume->meta.total_blocks;
-    int ALIGN    = 8 * PRODOS_BLOCK_SIZE;
-    int pages    = (blocks + ALIGN) / ALIGN;
-    int inode    = volume->meta.bitmap_block;
-    int base     = inode * PRODOS_BLOCK_SIZE;
-
-    int free = 0;
-    int byte;
-    int bits;
-
-#if DEBUG_BITMAP
-    printf( "DEBUG: BITMAP: Blocks: %d\n"   , blocks );
-    printf( "DEBUG: BITMAP: iNode : @%04X\n", inode  );
-    printf( "DEBUG: BITMAP: Pages : %d\n"   , pages  );
-    printf( "DEBUG: BITMAP: offset: $%06X\n", base   );
-#endif
-
-    while( pages --> 0 )
-    {
-        for( byte = 0; byte < PRODOS_BLOCK_SIZE; byte++ )
-        {
-            uint8_t bitmap = gaDsk[ base + byte ];
-
-#if DEBUG_META
-if( bitmap )
-    printf( "free @ base: %8X, offset: %04X\n", base, byte );
-#endif
-
-            for( bits = 0; bits < 8; bits++, bitmap >>= 1 )
-                if( bitmap & 1 )
-                    free++;
-        }
-
-        base += PRODOS_BLOCK_SIZE;
+        fclose( pFileMeta );
+        return true;
     }
 
-    return free;
-}
-
-
-// ------------------------------------------------------------------------
-void prodos_MetaGetFileName( ProDOS_FileHeader_t *pEntry, char sAttrib[ PRODOS_MAX_PATH ] )
-{
-    if( !pEntry )
-        return;
-
-    // Attribute meta-data
-    const char   sExt[] = "._META";
-    const int    nExt   = (int) strlen( sExt );
-    int          nAttrib = string_CopyUpper( sAttrib +       0, pEntry->name, pEntry->len );
-    /* */                  string_CopyUpper( sAttrib + nAttrib, sExt        , nExt        );
-}
-
-// ------------------------------------------------------------------------
-bool prodos_MetaLoad(ProDOS_FileHeader_t* pEntry)
-{
-    char sAttrib[ PRODOS_MAX_PATH ];
-    prodos_MetaGetFileName( pEntry, sAttrib );
-
-    printf( "Loading meta... %s\n", sAttrib );
-    FILE *pFileMeta = fopen( sAttrib, "r" );
-
-    if( !pFileMeta )
+    // ------------------------------------------------------------------------
+    bool prodos_MetaSave( ProDOS_FileHeader_t *pEntry )
     {
-        printf( "INFO.: Couldn't open attribute file for reads: %s\n", sAttrib );
-        return false;
+        char sAttrib[ PRODOS_MAX_PATH ];
+        prodos_MetaGetFileName( pEntry, sAttrib );
+
+        printf( "Saving meta... %s\n", sAttrib );
+        FILE *pFileMeta = fopen( sAttrib, "w+b" );
+
+        if( !pFileMeta )
+        {
+            printf( "ERROR: Couldnt' open attribute file for writing: %s\n", sAttrib );
+            return false;
+        }
+
+        fprintf( pFileMeta, "access  = $%02X\n", pEntry->access   );
+        fprintf( pFileMeta, "aux     = $%04X\n", pEntry->aux      );
+        fprintf( pFileMeta, "type    = $%02X\n", pEntry->type     );
+        fprintf( pFileMeta, "kind    = $%02X\n", pEntry->kind     );
+        fprintf( pFileMeta, "date    = $%04X\n", pEntry->date     );
+        fprintf( pFileMeta, "time    = $%04X\n", pEntry->time     );
+        fprintf( pFileMeta, "version = $%02X\n", pEntry->cur_ver  );
+        fprintf( pFileMeta, "minver  = $%02X\n", pEntry->min_ver  );
+        fprintf( pFileMeta, "moddate = $%04X\n", pEntry->mod_date );
+        fprintf( pFileMeta, "modtime = $%04X\n", pEntry->mod_time );
+
+        fclose( pFileMeta );
+        return true;
     }
 
-    int value;
-
-    fscanf( pFileMeta, "access  = $%X\n", &value ); pEntry->access   = value; // 02
-    fscanf( pFileMeta, "aux     = $%X\n", &value ); pEntry->aux      = value; // 04
-    fscanf( pFileMeta, "type    = $%X\n", &value ); pEntry->type     = value; // 02
-    fscanf( pFileMeta, "kind    = $%X\n", &value ); pEntry->kind     = value; // 02
-    fscanf( pFileMeta, "date    = $%X\n", &value ); pEntry->date     = value; // 04
-    fscanf( pFileMeta, "time    = $%X\n", &value ); pEntry->time     = value; // 04
-    fscanf( pFileMeta, "version = $%X\n", &value ); pEntry->cur_ver  = value; // 02
-    fscanf( pFileMeta, "minver  = $%X\n", &value ); pEntry->min_ver  = value; // 02
-    fscanf( pFileMeta, "moddate = $%X\n", &value ); pEntry->mod_date = value; // 04
-    fscanf( pFileMeta, "modtime = $%X\n", &value ); pEntry->mod_time = value; // 04
-
-#if DEBUG_ATTRIB
-    printf( "access  = $%02X\n", pEntry->access   );
-    printf( "aux     = $%04X\n", pEntry->aux      );
-    printf( "type    = $%02X\n", pEntry->type     );
-    printf( "kind    = $%02X\n", pEntry->kind     );
-    printf( "date    = $%04X\n", pEntry->date     );
-    printf( "time    = $%04X\n", pEntry->time     );
-    printf( "version = $%02X\n", pEntry->cur_ver  );
-    printf( "minver  = $%02X\n", pEntry->min_ver  );
-    printf( "moddate = $%04X\n", pEntry->mod_date );
-    printf( "modtime = $%04X\n", pEntry->mod_time );
-#endif
-
-    fclose( pFileMeta );
-    return true;
-}
-
-// ------------------------------------------------------------------------
-bool prodos_MetaSave( ProDOS_FileHeader_t *pEntry )
-{
-    char sAttrib[ PRODOS_MAX_PATH ];
-    prodos_MetaGetFileName( pEntry, sAttrib );
-
-    printf( "Saving meta... %s\n", sAttrib );
-    FILE *pFileMeta = fopen( sAttrib, "w+b" );
-
-    if( !pFileMeta )
-    {
-        printf( "ERROR: Couldnt' open attribute file for writing: %s\n", sAttrib );
-        return false;
-    }
-
-    fprintf( pFileMeta, "access  = $%02X\n", pEntry->access   );
-    fprintf( pFileMeta, "aux     = $%04X\n", pEntry->aux      );
-    fprintf( pFileMeta, "type    = $%02X\n", pEntry->type     );
-    fprintf( pFileMeta, "kind    = $%02X\n", pEntry->kind     );
-    fprintf( pFileMeta, "date    = $%04X\n", pEntry->date     );
-    fprintf( pFileMeta, "time    = $%04X\n", pEntry->time     );
-    fprintf( pFileMeta, "version = $%02X\n", pEntry->cur_ver  );
-    fprintf( pFileMeta, "minver  = $%02X\n", pEntry->min_ver  );
-    fprintf( pFileMeta, "moddate = $%04X\n", pEntry->mod_date );
-    fprintf( pFileMeta, "modtime = $%04X\n", pEntry->mod_time );
-
-    fclose( pFileMeta );
-    return true;
-}
-
+// --- Misc ---
 
 // ------------------------------------------------------------------------
 void prodos_Summary( ProDOS_VolumeHeader_t *volume, int files, int iFirstFree )

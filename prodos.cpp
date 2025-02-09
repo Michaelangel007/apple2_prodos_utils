@@ -15,9 +15,11 @@
     #include <string.h>   // memcpy()
     #include <time.h>     // time() localtime()
 
+
     #include "itoa.comma.h"
     #include "string.utils.cpp"
     #include "generic.disk.cpp"
+    #include "prodos.types.h"
     #include "prodos.utils.cpp"
     #include "prodos.tools.cpp"
 

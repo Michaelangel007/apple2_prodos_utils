@@ -32,20 +32,6 @@
 
 // Storage Kind ___________________________________________________________
 
-    enum ProDOS_Kind_e
-    {
-        ProDOS_KIND_DEL  = 0x0,
-        ProDOS_KIND_SEED = 0x1, // Single Block
-        ProDOS_KIND_SAPL = 0x2, // 1st Block is allocated blocks
-        ProDOS_KIND_TREE = 0x3,
-        ProDOS_KIND_PAS  = 0x4, // http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.25.html
-        ProDOS_KIND_GSOS = 0x5, // http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.25.html
-        ProDOS_KIND_DIR  = 0xD, // parent block entry for sub-directory
-        ProDOS_KIND_SUB  = 0xE, // subdir header entry to find parent directory; meta to reach parent
-        ProDOS_KIND_ROOT = 0xF, // volume header entry for root directory
-        NUM_PRODOS_KIND  = 16
-    };
-
     const char *gaProDOS_KindDescription[ NUM_PRODOS_KIND ] = // Storage Type
     {
          "del" // 0 Deleted
