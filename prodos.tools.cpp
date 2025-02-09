@@ -1100,7 +1100,6 @@ bool ProDOS_FileAdd( const char *to_path, const char *from_filename, ProDOS_File
     printf( "DEBUG: ADD: Path @ %06X\n", base );
 #endif
 
-
 //  int nDirBlocks       = prodos_BlockGetDirectoryCount();
 //  int nDirEntriesTotal = 0;
 //  int nDirEntriesFree  = 0;
@@ -1126,7 +1125,6 @@ bool ProDOS_FileAdd( const char *to_path, const char *from_filename, ProDOS_File
         return false;
     }
 
-
     // Block Management
 
     int nSrcSize     = File_Size( pSrcFile );
@@ -1148,7 +1146,6 @@ bool ProDOS_FileAdd( const char *to_path, const char *from_filename, ProDOS_File
         printf( "ERROR: Source file (%s bytes) doesn't fit on volume (%s bytes).\n", itoa_comma( nSrcSize ), itoa_comma( gnDskSize ) );
         return false;
     }
-
 
     uint8_t *buffer = new uint8_t[ nSrcSize + PRODOS_BLOCK_SIZE ];
     memset( buffer, 0, nSrcSize + PRODOS_BLOCK_SIZE );
@@ -1280,7 +1277,7 @@ bool ProDOS_FileAdd( const char *to_path, const char *from_filename, ProDOS_File
 
     entry.kind      = iKind;
     entry.inode     = iNode;
-    entry.blocks    = nBlocksTotal;
+    entry.blocks    = nBlocksData; // Note: File Entry does NOT include meta file block(s)
     entry.size      = nSrcSize;
     entry.dir_block = iDirBlock;
 
