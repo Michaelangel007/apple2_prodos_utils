@@ -1,21 +1,4 @@
-// Access _________________________________________________________________
-
-    const size_t PRODOS_BLOCK_SIZE   = 0x200; // 512 bytes/block
-    const size_t PRODOS_ROOT_BLOCK   = 2;
-    const int    PRODOS_ROOT_OFFSET  = PRODOS_ROOT_BLOCK * PRODOS_BLOCK_SIZE;
-
-    const int    PRODOS_MAX_FILENAME = 15;
-    const int    PRODOS_MAX_PATH     = 64; // TODO: Verify
-
-    const uint8_t ACCESS_D = 0x80; // Can destroy
-    const uint8_t ACCESS_N = 0x40; // Can rename 
-    const uint8_t ACCESS_B = 0x20; // Can backup
-    const uint8_t ACCESS_Z4= 0x10; // not used - must be zero?
-    const uint8_t ACCESS_Z3= 0x08;
-    const uint8_t ACCESS_I = 0x04; // invisible
-    const uint8_t ACCESS_W = 0x02; // Can write
-    const uint8_t ACCESS_R = 0x01; // Can read
-
+    // ------------------------------------------------------------
     void prodos_AccessToString( uint8_t access, char *text_ )
 #if 0
     {               // 76543210
