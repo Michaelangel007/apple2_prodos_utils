@@ -110,6 +110,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>cmd.exe /k copy $(OutDir)$(TargetName)$(TargetExt) $(ProjectDir)..\bin\</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy .exe to bin\</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
