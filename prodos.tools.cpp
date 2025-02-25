@@ -1626,18 +1626,26 @@ bool ProDOS_ReplaceBootSector( const char *pBootSectorFileName )
 
     size_t size = File_Size( pSrcFile );
 
-    const size_t BLOCK_0_BEG = 0x0*DSK_SECTOR_SIZE;
-    const size_t BLOCK_0_END = 0x1*DSK_SECTOR_SIZE;
+    assert(giInterleaveLastUsed != INTERLEAVE_AUTO_DETECT);
+    const bool   bDOS33Order     = (giInterleaveLastUsed == INTERLEAVE_DOS33_ORDER);
+    const size_t BLOCK_0A_SECTOR =                                 0x0;
+    const size_t BLOCK_0B_SECTOR = gnBootSector1
+                                 ? gnBootSector1
+                                 : bDOS33Order
+                                   ? 0x8
+                                   : 0x1;
+    const size_t BLOCK_0A_START  = BLOCK_0A_SECTOR * DSK_SECTOR_SIZE;
+    const size_t BLOCK_0B_START  = BLOCK_0B_SECTOR * DSK_SECTOR_SIZE;
 
-    memset( &gaDsk[ BLOCK_0_BEG ], 0, 256 ); // Block 0 Beg = T0S0
-    memset( &gaDsk[ BLOCK_0_END ], 0, 256 ); // Block 0 End = T0SE
+    memset( &gaDsk[ BLOCK_0A_START ], 0, 256 ); // Block 0 Beg = T0S0
+    memset( &gaDsk[ BLOCK_0B_START ], 0, 256 ); // Block 0 End = T0SE
 
     if( size < 512 )
-        printf( "INFO.: Boot sector < 512 bytes. Padding boot sector with zeroes.\n" );
+        printf( "INFO.: Boot sector %zu < 512 bytes. Padding boot sector with zeroes.\n", size );
 
     if( size > 512 )
     {
-        printf( "WARNING: Boot sector > 512 bytes. Truncating to first 512 bytes.\n" );
+        printf( "WARNING: Boot sector %zu > 512 bytes. Truncating to first 512 bytes.\n", size );
         size = 512;
     }
 
@@ -1649,26 +1657,8 @@ bool ProDOS_ReplaceBootSector( const char *pBootSectorFileName )
     printf( "suffix: $%02X (#%3d)\n", (int) prefix & 0xFF, (int) suffix );
 #endif
 
-    if( prefix ) fread( &gaDsk[ BLOCK_0_BEG ], 1, prefix, pSrcFile );
-    if( suffix ) fread( &gaDsk[ BLOCK_0_END ], 1, suffix, pSrcFile );
-
-#if 0
-    if (size <= 256)
-    {
-        fread( &gaDsk[ BLOCK_0_BEG ], 1, size, pSrcFile );
-    }
-    else
-    {
-        // First 256 bytes to T0S0
-        fread( &gaDsk[ BLOCK_0_BEG ], 1, 256, pSrcFile );
-
-        // Second 256 bytes to T0SE
-        if( size < 512 )
-            fread( &gaDsk[ BLOCK_0_END ], 1, size, pSrcFile );
-        else
-            fread( &gaDsk[ BLOCK_0_END ], 1, 512, pSrcFile );
-    }
-#endif
+    if( prefix ) { size_t nRead = fread( &gaDsk[ BLOCK_0A_START ], 1, prefix, pSrcFile ); printf( "Wrote %3zu bytes T0S0\n" , nRead                                  ); }
+    if( suffix ) { size_t nRead = fread( &gaDsk[ BLOCK_0B_START ], 1, suffix, pSrcFile ); printf( "wrote %3zu bytes T0S%c\n", nRead, HEX_TO_ASCII[ BLOCK_0B_SECTOR ] ); }
 
     fclose( pSrcFile );
 

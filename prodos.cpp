@@ -8,6 +8,7 @@
 
 #define DEBUG_MAIN 0
 
+    #include <assert.h>   // assert()
     #include <stdio.h>    // printf()
     #include <stdint.h>   // uint8_t
     #include <sys/stat.h> // stat
@@ -15,6 +16,9 @@
     #include <string.h>   // memcpy()
     #include <time.h>     // time() localtime()
 
+    bool gbVerbose = false;
+    const char *HEX_TO_ASCII = "0123456789ABCDEF";
+    int gnBootSector1  = 0;
 
     #include "itoa.comma.h"
     #include "string.utils.cpp"
@@ -809,6 +813,18 @@ int main( const int nArg, const char *aArg[] )
                             pBootSectorFileName = pArg + 6;
                     }
                     else
+                    if( strncmp( pArg+1,"sector1=",8) == 0)
+                    {
+                        char cSector = pArg[9];
+                        if ((cSector >= '0') && (cSector <= '9'))
+                            gnBootSector1 = (cSector - '0');
+                        if ((cSector >= 'a') && (cSector <= 'f'))
+                            gnBootSector1 = 10 + (cSector - 'a');
+                        if ((cSector >= 'A') && (cSector <= 'F'))
+                            gnBootSector1 = 10 + (cSector - 'A');
+                        printf( "Using custom boot sector 1 as T0S%c\n", HEX_TO_ASCII[ gnBootSector1 ] );
+                    }
+                    else
                     if( strncmp( pArg+1,"size=", 5 ) == 0 )
                     {
                         int size = atoi( pArg + 6 );
@@ -839,6 +855,11 @@ int main( const int nArg, const char *aArg[] )
                             printf( "ERROR: Invalid number of tracks. Must be >= 1 and <= 8192.\nDefaulting to 800 KB.\n" );
                             gnDskSize = DSK_SIZE_312;
                         }
+                    }
+                    else
+                    if( strncmp( pArg+1, "v", 1 )== 0 )
+                    {
+                        gbVerbose = true;
                     }
                     else
                         return printf( "ERROR: Unknown option: %s\n", pArg );
