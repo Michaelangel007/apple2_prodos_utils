@@ -264,8 +264,12 @@ bool DskSave()
         {
             size_t wrote = fwrite( gaDsk, 1, gnDskSize, pFile );
             (void) wrote;
+            if (gbVerbose)
+            {
+                printf( "Saved ProDOS order: %s\n", gpDskName );
+            }
     #if DEBUG_DSK_SAVE
-            printf( "DskSave() wrote .po: %d\n", wrote );   
+            printf( "DskSave() wrote .po: %d\n", wrote );
     #endif
         }
         else
@@ -298,6 +302,10 @@ bool DskSave()
                 }
 
                 offset += 16 * DSK_SECTOR_SIZE;
+            }
+            if (gbVerbose)
+            {
+                printf( "Saved DOS3.3 order: %s\n", gpDskName );
             }
         }
 
