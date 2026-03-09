@@ -29,7 +29,7 @@
 
 void version()
 {
-    printf( "ProDOS File System v0.3\n" );
+    printf( "ProDOS File System v0.4\n" );
 }
 
 /*
