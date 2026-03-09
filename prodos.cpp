@@ -625,7 +625,9 @@ int main( const int nArg, const char *aArg[] )
     }
     else
     {
-        if( iArg < nArg )
+        if( (iArg < nArg)
+        && aArg[ iArg ]
+        && (strncmp(aArg[ iArg ], "--", 2 ) != 0))
         {
             gpDskName = aArg[ iArg ];
             iArg++;
@@ -894,6 +896,13 @@ int main( const int nArg, const char *aArg[] )
         }
 
         default:
+            if (nArg == 2)
+            {
+                const char *pArg = &aArg[iArg][0];
+                if (pArg && stricmp(pArg, "--version") == 0)
+                    version();
+            }
+            else
             if( (nArg < 2) || !pCommand )
                 return usage();
             else
