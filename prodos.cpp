@@ -210,6 +210,7 @@ int usage()
 "    .dsk  (Assumes DOS3.3 sector order)\n"
 "    .do   (DOS3.3 sector order)\n"
 "    .po   (ProDOS sector order)\n"
+"    .hdv  (ProDOS sector order)\n"
 "\n"
 "NOTE: To skip always having to specify the <.dsk> name set the environment variable:\n"
 "\n"

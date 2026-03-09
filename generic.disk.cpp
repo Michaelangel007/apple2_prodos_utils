@@ -113,7 +113,25 @@
     }
 
 
-// --- Size --- 
+// --- File Formats ---
+
+    struct FileExtensionType_t
+    {
+        const char    *pExtension;
+        SectorOrder_e  eSectorOrder;
+    };
+
+    const FileExtensionType_t gaFileExtensionsType[] =
+    {
+          { ".dsk", INTERLEAVE_DOS33_ORDER  }
+        , { ".do" , INTERLEAVE_DOS33_ORDER  }
+        , { ".hdv", INTERLEAVE_PRODOS_ORDER }
+        , { ".po" , INTERLEAVE_PRODOS_ORDER }
+    };
+    const size_t gnFileExtensionsType = sizeof(gaFileExtensionsType) / sizeof(gaFileExtensionsType[0]);
+
+
+// --- Size ---
 
     int File_Size( FILE *pFile )
     {
@@ -152,9 +170,16 @@ bool DskGetInterleave( const char *dsk_filename )
         const char *pExt = file_GetExtension( dsk_filename );
         if( pExt )
         {
-            if( stricmp( pExt, ".do" ) == 0 ) giInterleaveLastUsed = INTERLEAVE_DOS33_ORDER ;
-            if( stricmp( pExt, ".po" ) == 0 ) giInterleaveLastUsed = INTERLEAVE_PRODOS_ORDER;
-            if( stricmp( pExt, ".dsk") == 0 ) giInterleaveLastUsed = INTERLEAVE_DOS33_ORDER ;
+            const int nExtensions = (int)gnFileExtensionsType;
+            for (int iExtension = 0; iExtension < nExtensions; iExtension++)
+            {
+                const FileExtensionType_t *pExtType = &gaFileExtensionsType[iExtension];
+                if (stricmp(pExt, pExtType->pExtension) == 0)
+                {
+                    giInterleaveLastUsed = pExtType->eSectorOrder;
+                    break;
+                }
+            }
         }
 
 #if DEBUG_DSK_INTERLEAVE
