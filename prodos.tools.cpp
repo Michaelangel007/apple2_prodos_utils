@@ -194,7 +194,10 @@
         printf( "\n" );
     #endif
 
-        volume->meta.total_blocks = blocks;
+        volume->meta.total_blocks = (blocks > 0xFFFF)
+            ? 0xFFFF
+            : blocks
+            ;
         return (size + PRODOS_BLOCK_SIZE - 1) / PRODOS_BLOCK_SIZE;
     }
 
