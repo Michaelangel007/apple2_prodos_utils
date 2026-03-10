@@ -194,9 +194,9 @@
         printf( "\n" );
     #endif
 
-        volume->meta.total_blocks = (blocks > 0xFFFF)
-            ? 0xFFFF
-            : blocks
+        volume->meta.total_blocks = (blocks > PRODOS_MAX_BLOCKS)
+            ? (uint16_t)PRODOS_MAX_BLOCKS
+            : (uint16_t)blocks
             ;
         return (size + PRODOS_BLOCK_SIZE - 1) / PRODOS_BLOCK_SIZE;
     }

@@ -1,11 +1,12 @@
 // Access _________________________________________________________________
 
-    const size_t PRODOS_BLOCK_SIZE   = 0x200; // 512 bytes/block
-    const size_t PRODOS_ROOT_BLOCK   = 2;
-    const int    PRODOS_ROOT_OFFSET  = PRODOS_ROOT_BLOCK * PRODOS_BLOCK_SIZE;
+    const size_t  PRODOS_MAX_BLOCKS   = 0xFFFF; // Volume total_blocks (32 MB volume is special. i.e. 140 KB = 280 Blocks, 800 KB = 1600 Blocks)
+    const size_t  PRODOS_BLOCK_SIZE   = 0x200;  // 512 bytes/block
+    const size_t  PRODOS_ROOT_BLOCK   = 2;
+    const int     PRODOS_ROOT_OFFSET  = PRODOS_ROOT_BLOCK * PRODOS_BLOCK_SIZE;
 
-    const int    PRODOS_MAX_FILENAME = 15;
-    const int    PRODOS_MAX_PATH     = 64; // TODO: Verify
+    const int     PRODOS_MAX_FILENAME = 15;
+    const int     PRODOS_MAX_PATH     = 64; // TODO: Verify
 
     const uint8_t ACCESS_D = 0x80; // Can destroy
     const uint8_t ACCESS_N = 0x40; // Can rename
